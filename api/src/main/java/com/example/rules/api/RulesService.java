@@ -1,52 +1,53 @@
 package com.example.rules.api;
 
-import com.daxtechnologies.services.*;
-import com.daxtechnologies.services.action.Action;
+//import com.daxtechnologies.services.*;
+//import com.daxtechnologies.services.action.Action;
 
 import java.util.Collection;
+import java.util.concurrent.Future;
 
 /**
  * A service which provides business rule evaluation to an application
  */
-public interface RulesService extends Service {
+public interface RulesService /*extends Service*/ {
 
-    /**
-     * Gets a local instance of the RulesService
-     *
-     * @return a local instance of the RulesService
-     */
-    static RulesService getInstance() {
-        return Services.lookupService(RulesService.class);
-    }
+//    /**
+//     * Gets a local instance of the RulesService
+//     *
+//     * @return a local instance of the RulesService
+//     */
+//    static RulesService getInstance() {
+//        return Services.lookupService(RulesService.class);
+//    }
 
-    /**
-     * Gets a remote instance of the RulesService running on a "rule.engine" process
-     *
-     * @return a remote instance of the RulesService
-     */
-    @SuppressWarnings("unused")
-    static RulesService getRemoteInstance() {
-        ServiceLookupContext context = ServiceLookupContext.newContext().processType("rule.engine");
-        return RulesService.getRemoteInstance(context);
-    }
+//    /**
+//     * Gets a remote instance of the RulesService running on a "rule.engine" process
+//     *
+//     * @return a remote instance of the RulesService
+//     */
+//    @SuppressWarnings("unused")
+//    static RulesService getRemoteInstance() {
+//        ServiceLookupContext context = ServiceLookupContext.newContext().processType("rule.engine");
+//        return RulesService.getRemoteInstance(context);
+//    }
 
-    /**
-     * Gets a remote instance of the RulesService matching a given context
-     *
-     * @return a remote instance of the RulesService
-     */
-    static RulesService getRemoteInstance(ServiceLookupContext context) {
-        return Services.lookupRemoteService(RulesService.class, context);
-    }
+//    /**
+//     * Gets a remote instance of the RulesService matching a given context
+//     *
+//     * @return a remote instance of the RulesService
+//     */
+//    static RulesService getRemoteInstance(ServiceLookupContext context) {
+//        return Services.lookupRemoteService(RulesService.class, context);
+//    }
 
     /**
      * Schedules an asynchronous rules run against a given request
      *
      * @param request the RulesRequest
-     * @return an Action used to track the run
+     * @return a Future used to track the run
      */
-    @Callable
-    Action schedule(RulesRequest request);
+//    @Callable
+    Future<RulesResult> schedule(RulesRequest request);
 
     /**
      * Executes a synchronous rules run against a given request
@@ -70,7 +71,7 @@ public interface RulesService extends Service {
      *
      * @return a Collection of known Request fully-qualified class names
      */
-    @Callable
+//    @Callable
     Collection<String> getKnownRequests();
 
     /**
@@ -79,7 +80,7 @@ public interface RulesService extends Service {
      * @param request the RulesRequest
      * @return the class of the resulting RulesResult
      */
-    @Callable
+//    @Callable
     Class<? extends RulesResult> getResultClass(RulesRequest request);
 
     /**
@@ -88,17 +89,17 @@ public interface RulesService extends Service {
      * @param requestClass the RulesRequest class
      * @return the class of the resulting RulesResult
      */
-    @Callable
+//    @Callable
     Class<? extends RulesResult> getResultClass(Class<? extends RulesRequest> requestClass);
 
-    /**
-     * Returns the state of a rules run
-     *
-     * @param ruleId the ID of a rules run
-     * @return the run state (INIT, RUNNING, SUCCESS, FAILURE), or null if the run is either expired or never scheduled
-     */
-    @Callable
-    Action.State getStatus(String ruleId);
+//    /**
+//     * Returns the state of a rules run
+//     *
+//     * @param ruleId the ID of a rules run
+//     * @return the run state (INIT, RUNNING, SUCCESS, FAILURE), or null if the run is either expired or never scheduled
+//     */
+//    @Callable
+//    Action.State getStatus(String ruleId);
 
     /**
      * Returns the result of a rules run
@@ -106,7 +107,7 @@ public interface RulesService extends Service {
      * @param ruleId the ID of a rules run
      * @return the RulesResult of the action (which may be partially complete), or {@code null} if the run is either expired or never scheduled
      */
-    @Callable
+//    @Callable
     <T extends RulesResult> T getResult(String ruleId);
 
     /**
@@ -115,7 +116,7 @@ public interface RulesService extends Service {
      * @param ruleId the ID of an in-progress rules run
      * @return {@code true} if a local run was found and cancelled, {@code false} otherwise
      */
-    @Callable
+//    @Callable
     boolean cancel(String ruleId);
 
     /**
@@ -124,7 +125,7 @@ public interface RulesService extends Service {
      * @param request the RulesRequest
      * @return the ID of the run, or null if the run is either expired or never scheduled
      */
-    @Callable
+//    @Callable
     String getRulesId(RulesRequest request);
 
     /**
@@ -132,7 +133,7 @@ public interface RulesService extends Service {
      *
      * @return a Collection of RuleInfo
      */
-    @Callable
+//    @Callable
     Collection<RuleInfo> getRuleInfo();
 
     /**
@@ -140,6 +141,6 @@ public interface RulesService extends Service {
      *
      * @return a Collection of RuleInfo
      */
-    @Callable
+//    @Callable
     Collection<RuleInfo> getRuleInfo(Class<? extends RulesRequest> requestClass);
 }
