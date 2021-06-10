@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>rule-api</artifactId>
+    <name>Rule Service - API</name>
+    <description>The rule service API</description>
+
+    <parent>
+        <groupId>com.example</groupId>
+        <artifactId>rule-service</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+        </dependency>
+        <!-- Components -->
+        <!--        <dependency>-->
+        <!--            <groupId>dax-components</groupId>-->
+        <!--            <artifactId>dax-components-services</artifactId>-->
+        <!--        </dependency>-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>dax-components</groupId>-->
+        <!--            <artifactId>dax-components-record</artifactId>-->
+        <!--        </dependency>-->
+    </dependencies>
+</project>

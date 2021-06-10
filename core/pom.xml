@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>rule-core</artifactId>
+    <name>Rule Service - Core</name>
+    <description>The rule service core</description>
+
+    <parent>
+        <groupId>com.example</groupId>
+        <artifactId>rule-service</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <dependencies>
+        <!-- Themis -->
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>rule-spi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>com.spirent.cem.framework</groupId>-->
+<!--            <artifactId>themis-jms</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
+
+        <!-- Components -->
+<!--        <dependency>-->
+<!--            <groupId>dax-components</groupId>-->
+<!--            <artifactId>dax-components-shell</artifactId>-->
+<!--        </dependency>-->
+
+        <!-- Drools -->
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-api</artifactId>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.kie</groupId>-->
+<!--            <artifactId>kie-ci</artifactId>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>com.sun</groupId>-->
+<!--                    <artifactId>tools</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-compiler</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-decisiontables</artifactId>
+        </dependency>
+
+        <!-- Testing -->
+<!--        <dependency>-->
+<!--            <groupId>com.spirent.cem.framework</groupId>-->
+<!--            <artifactId>themis-test-rules</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>dax-components</groupId>-->
+<!--            <artifactId>dax-components-web-container</artifactId>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>dax-components</groupId>-->
+<!--            <artifactId>dax-components-devtools</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>junit</groupId>-->
+<!--            <artifactId>junit</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>org.mockito</groupId>-->
+<!--            <artifactId>mockito-core</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>org.powermock</groupId>-->
+<!--            <artifactId>powermock-com.example.rules.api-mockito2</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+    </dependencies>
+
+<!--    <build>-->
+<!--        <plugins>-->
+<!--            <plugin>-->
+<!--                <groupId>org.jacoco</groupId>-->
+<!--                <artifactId>jacoco-maven-plugin</artifactId>-->
+<!--                <configuration>-->
+<!--                    <excludes>-->
+<!--                        <exclude>org/drools/**/*</exclude>-->
+<!--                    </excludes>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+<!--        </plugins>-->
+<!--    </build>-->
+</project>
