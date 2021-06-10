@@ -1,36 +1,31 @@
 package com.example.rules.api;
 
-//import com.daxtechnologies.oam.ILogger;
-//import com.daxtechnologies.oam.TheLogger;
-//import com.daxtechnologies.util.StreamUtils;
-//import com.daxtechnologies.util.StringUtils;
-//import com.daxtechnologies.util.serialize.SerializeFactory;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterOutputStream;
 
 import static com.example.rules.api.ErrorNumbers.*;
 
-public class RulesSerializer {
+public class RuleSerializer {
 
-    private static final Logger LOG = LogManager.getLogger(RulesSerializer.class);
+    private static final Logger LOG = LogManager.getLogger(RuleSerializer.class);
     private static final XStream xstream;
-
-//    private static final SerializeFactory<?> serializer = SerializeFactory.getXmlInstance();
 
     static {
         xstream = new XStream();
         xstream.addPermission(AnyTypePermission.ANY);
     }
 
-    private RulesSerializer() {
+    private RuleSerializer() {
     }
 
     /**
@@ -71,7 +66,7 @@ public class RulesSerializer {
             String s = serializeAsString(o);
             return compress(s);
         } catch (IOException | RuntimeException e) {
-            throw new RulesException(e, SERIALIZATION_ERROR);
+            throw new RuleException(e, SERIALIZATION_ERROR);
         }
     }
 
@@ -89,10 +84,10 @@ public class RulesSerializer {
             } else {
                 return null;
             }
-        } catch (RulesException r) {
+        } catch (RuleException r) {
             throw r;
         } catch (IOException | RuntimeException e) {
-            throw new RulesException(e, DESERIALIZATION_ERROR);
+            throw new RuleException(e, DESERIALIZATION_ERROR);
         }
     }
 
@@ -107,7 +102,7 @@ public class RulesSerializer {
         try {
             return StringUtils.isNotEmpty(s) ? (T)xstream.fromXML(s) : null;
         } catch (RuntimeException e) {
-            throw new RulesException(e, UNKNOWN_RULES_TYPE, s.length() < 128 ? s : s.substring(0, 124) + "...");
+            throw new RuleException(e, UNKNOWN_RULE_TYPE, s.length() < 128 ? s : s.substring(0, 124) + "...");
         }
     }
 

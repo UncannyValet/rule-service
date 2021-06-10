@@ -20,7 +20,7 @@ public class ErrorNumbers {
     public static final int NO_PROCESSOR_REQUEST = 15;
     public static final int NO_PROCESSOR_CONTEXT = 16;
     public static final int UNKNOWN_SESSION = 17;
-    public static final int UNKNOWN_RULES_TYPE = 18;
+    public static final int UNKNOWN_RULE_TYPE = 18;
     public static final int INVALID_FACT_TYPE = 19;
     public static final int INVALID_SUCCESS_CALLBACK = 20;
     public static final int CLI_FAILURE = 21;

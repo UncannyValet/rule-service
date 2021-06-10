@@ -1,10 +1,6 @@
 package com.example.rules.api;
 
-//import com.daxtechnologies.record.AbstractRecord;
-
-public class FactStatistic /*extends AbstractRecord<FactStatistic>*/ {
-
-    private static final long serialVersionUID = 3544093273362322936L;
+public class FactStatistic {
 
     private int count;
     private long duration;

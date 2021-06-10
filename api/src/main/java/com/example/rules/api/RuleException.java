@@ -1,33 +1,30 @@
 package com.example.rules.api;
 
-//import com.daxtechnologies.exception.BaseRuntimeException;
-//import com.daxtechnologies.exception.Module;
-
 /**
- * Generic exception for all rules engine failures
+ * Generic exception for all rule engine failures
  */
-public class RulesException extends RuntimeException {
+public class RuleException extends RuntimeException {
 
     private static final Object[] EMPTY_ARGUMENTS = new Object[]{};
 
     private final int errorNumber;
     private final Object[] arguments;
 
-    public RulesException(int errorNumber) {
+    public RuleException(int errorNumber) {
         this(errorNumber, EMPTY_ARGUMENTS);
     }
 
-    public RulesException(int errorNumber, Object... arguments) {
+    public RuleException(int errorNumber, Object... arguments) {
         super();
         this.errorNumber = errorNumber;
         this.arguments = arguments;
     }
 
-    public RulesException(Throwable cause, int errorNumber) {
+    public RuleException(Throwable cause, int errorNumber) {
         this(cause, errorNumber, EMPTY_ARGUMENTS);
     }
 
-    public RulesException(Throwable cause, int errorNumber, Object... arguments) {
+    public RuleException(Throwable cause, int errorNumber, Object... arguments) {
         super(cause);
         this.errorNumber = errorNumber;
         this.arguments = arguments;

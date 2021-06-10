@@ -1,10 +1,8 @@
 package com.example.rules.api;
 
-//import com.daxtechnologies.record.AbstractRecord;
-
 import java.util.Map;
 
-public class RuleInfo /*extends AbstractRecord<RuleInfo>*/ {
+public class RuleInfo {
 
     public enum Type {
         RULE,
@@ -24,7 +22,6 @@ public class RuleInfo /*extends AbstractRecord<RuleInfo>*/ {
 
     private String session;
 
-    @SuppressWarnings("squid:S1948")
     private Map<String, Object> attributes;
 
     public String getPkg() {
