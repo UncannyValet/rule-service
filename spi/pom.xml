@@ -13,7 +13,6 @@
     </parent>
 
     <dependencies>
-        <!-- Themis -->
         <dependency>
             <groupId>com.example</groupId>
             <artifactId>rule-api</artifactId>
