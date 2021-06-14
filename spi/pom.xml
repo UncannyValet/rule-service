@@ -19,31 +19,9 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Components -->
-<!--        <dependency>-->
-<!--            <groupId>dax-components</groupId>-->
-<!--            <artifactId>dax-components-database</artifactId>-->
-<!--        </dependency>-->
-
-<!--        <dependency>-->
-<!--            <groupId>dax-components</groupId>-->
-<!--            <artifactId>dax-components-dynarecord</artifactId>-->
-<!--        </dependency>-->
-
-<!--        <dependency>-->
-<!--            <groupId>dax-components</groupId>-->
-<!--            <artifactId>dax-components-cache</artifactId>-->
-<!--        </dependency>-->
-
-<!--        <dependency>-->
-<!--            <groupId>dax-components</groupId>-->
-<!--            <artifactId>dax-components-feature</artifactId>-->
-<!--        </dependency>-->
-
-        <!-- Other -->
-<!--        <dependency>-->
-<!--            <groupId>commons-lang</groupId>-->
-<!--            <artifactId>commons-lang</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.atteo.classindex</groupId>
+            <artifactId>classindex</artifactId>
+        </dependency>
     </dependencies>
 </project>

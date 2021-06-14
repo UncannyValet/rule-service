@@ -1,33 +1,26 @@
 package com.example.rules.spi.arbiter;
 
-//import com.daxtechnologies.exception.ExceptionUtilities;
-//import com.daxtechnologies.oam.ILogger;
-//import com.daxtechnologies.oam.TheLogger;
-//import com.daxtechnologies.services.Provider;
-//import com.daxtechnologies.services.trace.Trace;
-//import com.daxtechnologies.util.ClassUtils;
-//import com.daxtechnologies.util.Releasable;
-//import com.daxtechnologies.util.StringUtils;
 import com.example.rules.api.RuleException;
 import com.example.rules.api.RuleRequest;
 import com.example.rules.api.RuleResult;
 import com.example.rules.spi.Context;
-import com.example.rules.spi.RulesService;
 import com.example.rules.spi.investigator.Investigator;
-//import com.example.rules.spi.processor.AbstractRulesProcessor;
+import com.example.rules.spi.investigator.InvestigatorFactory;
+import com.example.rules.spi.session.RuleCancellationEvent;
 import com.example.rules.spi.session.RuleSession;
+import com.example.rules.spi.session.SessionFactory;
 import com.example.rules.spi.utils.ClassUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.context.event.EventListener;
 
 import java.util.*;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-import static com.example.rules.api.ErrorNumbers.*;
+import static com.example.rules.api.ErrorNumbers.INVESTIGATOR_FAILURE;
+import static com.example.rules.api.ErrorNumbers.PROCESS_FAILURE;
 
 /**
  * An abstract implementation of the Arbiter interface, to minimize the effort required to implement this interface
@@ -35,69 +28,49 @@ import static com.example.rules.api.ErrorNumbers.*;
  * @param <R> the RuleRequest class associated with this Arbiter
  * @param <O> the RuleResult class associated with this Arbiter
  */
-//@Provider
-public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResult> /*extends AbstractRulesProcessor<R>*/ implements Arbiter<R, O> {
+public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResult> implements Arbiter<R, O> {
+
+    private static final String[] EMPTY_RULE_SET = new String[]{};
+    private static final Map<Class<?>, Class<?>> resultClasses = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, String[]> ruleSetMap = new ConcurrentHashMap<>();
 
     protected final Logger LOG = LogManager.getLogger(getClass());
 
-    private List<Investigator<R, ?>> investigators;
-    private final List<RuleRequest> extensions = new ArrayList<>();
+    private final Context context;
+    private final InvestigatorFactory investigatorFactory;
+    private final SessionFactory sessionFactory;
+    private final String[] ruleSets;
 
-    private final RulesService rulesService = RulesService.getInstance();
-    private O result;
-    private final Set<String> ruleSet = new HashSet<>();
-    private Class<O> resultClass;
-//    private boolean parallelFacts;
+    private final O result;
 
-//    private volatile RuleSession runningSession;
+    private volatile RuleSession runningSession;
 
-    @Override
-    public void initialize(R request, Context context, RuleSession session, List<Investigator<R, ?>> investigators) {
-//        super.doInitialize(objects);
-
-//        R request = getRequest();
-//        LOG.info("Initializing " + getName() + " to handle " + request.getName());
+    public AbstractArbiter(Context context, InvestigatorFactory investigatorFactory, SessionFactory sessionFactory) {
+        this.context = context;
+        this.investigatorFactory = investigatorFactory;
+        this.sessionFactory = sessionFactory;
 
         // Set result, creating one if not available
         RuleResult r = context.getResult();
-        this.investigators = investigators;
         if (r == null) {
-            result = newResult();
+            @SuppressWarnings("unchecked")
+            Class<O> resultClass = (Class<O>)resultClasses.computeIfAbsent(getClass(), clazz -> ClassUtils.getTypeArgument(clazz, Arbiter.class, 1));
+            result = ClassUtils.instantiate(resultClass);
         } else {
             // Copy the result using serialization
-            // Result updates by rules must not interfere with API calls to retrieve the result
-            result = resultClass.cast(SerializationUtils.clone(r));
+            // Intermediate updates by rules must not interfere with API calls to retrieve the result
+            result = (O)SerializationUtils.clone(r);
         }
 
-        // Retrieve and initialize appropriate investigators based on the request
-        investigators.forEach(i -> i.initialize(request, context, session));
-//                    LOG.info("- " + i.getName() + " gathers " + i.getFactClass().getSimpleName() + "(s)");
-
-//        parallelFacts = config.getBoolean("request." + getRequestClass().getSimpleName() + ".parallel.facts", true);
+        ruleSets = ruleSetMap.computeIfAbsent(getClass(), clazz -> {
+            RuleSet annotation = getClass().getAnnotation(RuleSet.class);
+            return annotation != null ? annotation.value() : EMPTY_RULE_SET;
+        });
     }
 
-//    @Override
-//    public void release() {
-//        super.release();
-//
-//        investigators.forEach(Releasable::release);
-//    }
-
-//    @Override
-//    public final void setOptions(ArbiterFactory<R, O, ? extends Arbiter<R, O>> factory/*, ArbiterOptions options*/) {
-//        setRequestClass(factory.getRequestClass());
-//        resultClass = factory.getResultClass();
-        // Use the sessions registered with the service and from the arbiter annotation
-//        ruleSet.addAll(rulesService.getRegisteredSessions(getRequestClass()));
-//        if (options != null && StringUtils.isNotEmpty(options.rules())) {
-//            ruleSet.add(options.rules());
-//        }
-//    }
-
-//    @Override
-//    public final Class<O> getResultClass() {
-//        return resultClass;
-//    }
+    protected final Context getContext() {
+        return context;
+    }
 
     /**
      * Gets the RulesResult this processor was initialized with (or created)
@@ -109,113 +82,76 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
     }
 
     @Override
-    public final Void call() {
-        runRules();
-        return null;
-    }
-
-    @Override
-    @SuppressWarnings("squid:S1181")
-    public final Collection<RuleRequest> runRules() {
-//        Context context = getContext();
-//        String logPrefix = "Arbiter '" + getName() + ":" + getContext().getId() + "'";
-//        LOG.info("Processing " + getRequest().getName() + " in session " + context.getId() + "...");
+    public final O processRules() {
         try {
-//            checkInterrupt();
-//            Trace.doWithTask("Pre-Session", v -> beforeSession());
-//            do {
             beforeSession();
-                runSession();
-                afterSession();
-//            } while (continueBatch());
-//            checkInterrupt();
-//            Trace.doWithTask("Post-Session", v -> afterSession());
-//            checkInterrupt();
+            runSession();
+            afterSession();
         } catch (CancellationException e) {
             // Run was cancelled, propagate up
-            LOG.debug(logPrefix + " was cancelled", e);
+            LOG.debug(context.getId() + " was cancelled", e);
             throw e;
         } catch (Throwable e) {
-            LOG.debug(logPrefix + " terminated by an exception", e);
-            if (getContext().isStopped() && ExceptionUtilities.containsTypeOf(e, InterruptedException.class)) {
+            LOG.debug(context.getId() + " terminated by an exception", e);
+            if (context.isStopped() /*&& ExceptionUtilities.containsTypeOf(e, InterruptedException.class)*/) {
                 // Session cancelled, here or in Investigator
                 throw new CancellationException();
             }
-            throw new RuleException(e, PROCESS_FAILURE, getRequest().getName());
+            throw new RuleException(e, PROCESS_FAILURE, context.getRequest().getName());
         } finally {
-            LOG.debug(logPrefix + " finished");
+            LOG.debug(context.getId() + " finished");
         }
         context.setResult(result);
-        return extensions;
+        return result;
     }
 
     @SuppressWarnings("squid:S00112")
     private void runSession() {
-        try (RuleSession session = rulesService.getSession(ruleSet)) {
+        try (RuleSession session = sessionFactory.getSession(context.getRequest(), ruleSets)) {
             // Don't bother running if no rules are defined for the session
             int totalRules = session.getRuleCount();
             if (totalRules > 0) {
-//                Context context = getContext();
                 session.setLogger(LOG);
-//                checkInterrupt();
-//                Trace.doWithTask("Pre-Facts", v -> beforeFacts(session));
                 beforeFacts(session);
-                // Gather facts for each fact type using registered investigators
                 LOG.info("Gathering facts...");
-//                checkInterrupt();
-//                Trace.doWithTask("Investigation", v -> {
-                    if (parallelFacts && investigators.size() > 1) {
-                        investigate(session);
-                    } else {
-                        investigators.forEach(investigator -> {
-                            investigator.setSession(session);
-                            investigator.run();
-                        });
-                    }
-//                });
-//                checkInterrupt();
-//                Trace.doWithTask("Pre-Rules", v -> beforeRules(session));
+                investigate(session);
                 beforeRules(session);
-//                checkInterrupt();
                 LOG.info("Fact gathering complete");
                 context.getFactStatistics().forEach((type, stats) -> LOG.info("- " + type + ": " + stats.getCount() + " fact(s) in " + stats.getDuration() + " ms"));
                 LOG.info("Running " + totalRules + " rule(s) over " + session.getFactCount() + " fact(s)...");
                 context.startRules(getClass());
                 runningSession = session;
-                Trace.doWithTask("Rule Session " + ruleSet, v -> {
-                    int ruleCount = session.runRules();
+                int ruleCount;
+                try {
+                    ruleCount = session.runRules();
+                } finally {
                     runningSession = null;
-                    context.finishRules(getClass(), session);
-                    LOG.info("Rule session " + ruleSet + " complete, " + ruleCount + " rule(s) asserted in " + context.getRuleDuration(this.getClass()) + " ms");
-                });
-                checkInterrupt();
-                Trace.doWithTask("Post-Rules", v -> afterRules(session));
+                }
+                context.finishRules(getClass(), session);
+                LOG.info("Rule session complete, " + ruleCount + " rule(s) asserted in " + context.getRuleDuration(this.getClass()) + " ms");
+                afterRules(session);
             }
         }
     }
 
     /**
      * Spawns Investigators in parallel to gather facts, accounting for dependencies if any exist
-     *
-     * @param session the RulesSession into which facts are inserted
      */
     private void investigate(RuleSession session) {
-        Set<Investigator<R, ?>> currentInvestigators = new HashSet<>(investigators);
+        Set<Investigator<R, ?>> currentInvestigators = new HashSet<>(investigatorFactory.getInvestigators(context));
 
         // Run investigators, delaying those with dependencies until the dependencies have completed
         while (!currentInvestigators.isEmpty()) {
             List<Future<Investigator<R, ?>>> futures = currentInvestigators.stream()
                     .filter(i -> !i.dependsOn(currentInvestigators))
-                    .peek(i -> i.setSession(session))
-                    .peek(i -> i.setTrace(Trace.getCurrent()))
-                    .map(rulesService::scheduleInvestigation)
+                    .map(i -> context.scheduleInvestigation(i, session))
                     .collect(Collectors.toList());
 
             futures.forEach(future -> {
                 try {
                     currentInvestigators.remove(future.get());
                 } catch (InterruptedException e) {
-                    if (getContext().isStopped()) {
+                    if (context.isStopped()) {
                         // Request cancelled, cancel spawned investigators as well
                         futures.forEach(f -> f.cancel(true));
                         Thread.currentThread().interrupt();
@@ -229,46 +165,16 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
         }
     }
 
-//    /**
-//     * Returns true when the Investigators used by this Arbiter have more data to provide for a batch operation
-//     *
-//     * @return {@code true} if all the Investigators have more data to provide, {@code false} otherwise
-//     */
-//    private boolean continueBatch() {
-//        return investigators.stream()
-//                .map(Investigator::dataAvailable)
-//                .reduce((a, b) -> a && b)
-//                .orElse(false);
-//    }
-
     /**
-     * Creates a new RulesResult
-     *
-     * @return a new RulesResult
+     * Listener to process session cancellations, stopping the rule session if it is in progress
      */
-    private O newResult() {
-        return ClassUtils.instantiate(resultClass);
+    @EventListener(RuleCancellationEvent.class)
+    public void onCancellationEvent(RuleCancellationEvent event) {
+        RuleSession session = runningSession;
+        if (session != null && context.getId().equals(event.getSessionId())) {
+            session.halt();
+        }
     }
-
-//    /**
-//     * Called in subclasses to register new requests to be run after this rules session completes
-//     * <p>Can be called at any time before processing completes</p>
-//     *
-//     * @param request the new RulesRequest to run
-//     */
-//    protected final void registerExtension(RuleRequest request) {
-//        extensions.add(request);
-//    }
-
-//    @Override
-//    protected void doStop() {
-//        super.doStop();
-//
-//        RulesSession currentSession = runningSession;
-//        if (currentSession != null) {
-//            currentSession.halt();
-//        }
-//    }
 
 //    private static void checkInterrupt() {
 //        if (Thread.interrupted()) {
@@ -291,7 +197,7 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
     }
 
     /**
-     * Override in subclasses to execute code before rules executed
+     * Override in subclasses to execute code before rules are executed
      *
      * @param session the active RulesSession
      */

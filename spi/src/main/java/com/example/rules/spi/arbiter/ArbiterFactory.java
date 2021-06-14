@@ -2,22 +2,13 @@ package com.example.rules.spi.arbiter;
 
 import com.example.rules.api.RuleRequest;
 import com.example.rules.api.RuleResult;
+import com.example.rules.spi.Context;
 
-/**
- * Base interface for an ArbiterFactory
- *
- * @param <A> the Arbiter class that this factory builds
- */
-public interface ArbiterFactory<R extends RuleRequest, O extends RuleResult, A extends Arbiter<R, O>> /*extends RuleFactory<R, A>*/ {
+public interface ArbiterFactory {
 
-    Class<R> getRequestClass();
+    Class<? extends RuleResult> getResultClass(RuleRequest request);
 
-    /**
-     * Returns the RulesResult class for which this factory provides arbiters
-     *
-     * @return a RulesResult class
-     */
-    Class<O> getResultClass();
+    Class<? extends RuleResult> getResultClass(Class<? extends RuleRequest> requestClass);
 
-    A newArbiter();
+    <R extends RuleRequest, A extends Arbiter<R, ? extends RuleResult>> A getArbiter(Context context);
 }
