@@ -1,22 +1,22 @@
 package com.example.rules.spi.investigator;
 
-import com.daxtechnologies.exception.ExceptionUtilities;
-import com.daxtechnologies.oam.ILogger;
-import com.daxtechnologies.oam.TheLogger;
-import com.daxtechnologies.services.Provider;
-import com.daxtechnologies.services.trace.Trace;
-import com.daxtechnologies.util.*;
-import com.spirent.cem.rules.api.RulesException;
-import com.spirent.cem.rules.api.RulesRequest;
-import com.spirent.cem.rules.spi.Context;
-import com.spirent.cem.rules.spi.processor.AbstractRulesProcessor;
-import com.spirent.cem.rules.spi.session.RulesSession;
-import jodd.mutable.MutableLong;
+//import com.daxtechnologies.exception.ExceptionUtilities;
+//import com.daxtechnologies.oam.ILogger;
+//import com.daxtechnologies.oam.TheLogger;
+//import com.daxtechnologies.services.Provider;
+//import com.daxtechnologies.services.trace.Trace;
+//import com.daxtechnologies.util.*;
+import com.example.rules.api.RuleRequest;
+import com.example.rules.spi.Context;
+//import com.example.rules.spi.processor.AbstractRulesProcessor;
+import com.example.rules.spi.session.RuleSession;
+import org.apache.commons.lang3.mutable.MutableLong;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+//import jodd.mutable.MutableLong;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.spirent.cem.rules.api.ErrorNumbers.PROCESSOR_INSTANTIATION_FAILURE;
 
 /**
  * An abstract implementation of the Investigator interface, to minimize the effort required to implement this interface
@@ -24,155 +24,155 @@ import static com.spirent.cem.rules.api.ErrorNumbers.PROCESSOR_INSTANTIATION_FAI
  * @param <R> the RulesRequest class associated with this processor
  * @param <F> the Fact class associated with this processor
  */
-@Provider
-public abstract class AbstractInvestigator<R extends RulesRequest, F> extends AbstractRulesProcessor<R> implements Investigator<R, F> {
+//@Provider
+public abstract class AbstractInvestigator<R extends RuleRequest, F> /*extends AbstractRulesProcessor<R>*/ implements Investigator<R, F> {
 
     @SuppressWarnings("squid:S00116")
-    protected final ILogger LOG = TheLogger.getInstance(getClass());
+    protected final Logger LOG = LogManager.getLogger(getClass());
 
-    private RulesSession session;
+    private RuleSession session;
     private int factCount;
     private Class<F> factClass;
-    private boolean enabled;
-    private Trace parentTrace;
+//    private boolean enabled;
+//    private Trace parentTrace;
     private boolean isDebug;
     private final Map<String, MutableLong> debugTiming = new LinkedHashMap<>();
 
-    @SuppressWarnings("rawtypes")
-    private Class<? extends FactFunction>[] functionClasses;
-    private final List<FactFunction<F>> functions = new ArrayList<>();
-    private final List<FactAggregator<F, ?>> aggregators = new ArrayList<>();
-    private FactFunction<F> factHandler;
-    private Set<Class<?>> dependencies;
+//    @SuppressWarnings("rawtypes")
+//    private Class<? extends FactFunction>[] functionClasses;
+//    private final List<FactFunction<F>> functions = new ArrayList<>();
+//    private final List<FactAggregator<F, ?>> aggregators = new ArrayList<>();
+//    private FactFunction<F> factHandler;
+//    private Set<Class<?>> dependencies;
 
     @Override
-    public void doInitialize(Object... objects) {
-        super.doInitialize(objects);
+    public void initialize(R request, Context context, RuleSession session) {
+//        super.doInitialize(objects);
 
-        enabled = config.getBoolean("investigator." + getClass().getSimpleName() + ".enabled", true);
-        isDebug = LOG.isDebugLevel();
+//        enabled = config.getBoolean("investigator." + getClass().getSimpleName() + ".enabled", true);
+        isDebug = LOG.isDebugEnabled();
 
         // Build the insert flow from the defined function classes
-        factHandler = buildFlow(objects);
+//        factHandler = buildFlow(objects);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private FactFunction<F> buildFlow(Object... objects) {
-        FactFunction<F> first = null;
-        FactFunction<F> current = null;
-        if (functionClasses != null) {
-            for (Class<? extends FactFunction> functionClass : functionClasses) {
-                try {
-                    FactFunction<F> f = ClassUtils.newInstance(functionClass);
-                    f.initialize(objects);
-                    functions.add(f);
-                    if (f instanceof FactAggregator) {
-                        aggregators.add((FactAggregator<F, ?>)f);
-                    }
-                    if (current != null) {
-                        current.andThen(f);
-                    } else {
-                        first = f;
-                    }
-                    current = f;
-                } catch (ClassUtils.UninstantiableClassException | RuntimeException e) {
-                    throw new RulesException(e, PROCESSOR_INSTANTIATION_FAILURE, functionClass.getSimpleName());
-                }
-            }
-        }
+//    @SuppressWarnings({"unchecked", "rawtypes"})
+//    private FactFunction<F> buildFlow(Object... objects) {
+//        FactFunction<F> first = null;
+//        FactFunction<F> current = null;
+//        if (functionClasses != null) {
+//            for (Class<? extends FactFunction> functionClass : functionClasses) {
+//                try {
+//                    FactFunction<F> f = ClassUtils.newInstance(functionClass);
+//                    f.initialize(objects);
+//                    functions.add(f);
+//                    if (f instanceof FactAggregator) {
+//                        aggregators.add((FactAggregator<F, ?>)f);
+//                    }
+//                    if (current != null) {
+//                        current.andThen(f);
+//                    } else {
+//                        first = f;
+//                    }
+//                    current = f;
+//                } catch (ClassUtils.UninstantiableClassException | RuntimeException e) {
+//                    throw new RulesException(e, PROCESSOR_INSTANTIATION_FAILURE, functionClass.getSimpleName());
+//                }
+//            }
+//        }
+//
+//        InsertFunction f = new InsertFunction();
+//        if (current != null) {
+//            current.andThen(f);
+//        } else {
+//            first = f;
+//        }
+//
+//        return first;
+//    }
 
-        InsertFunction f = new InsertFunction();
-        if (current != null) {
-            current.andThen(f);
-        } else {
-            first = f;
-        }
+//    @Override
+//    public void release() {
+//        super.release();
+//
+//        functions.forEach(Releasable::release);
+//    }
 
-        return first;
-    }
+//    @Override
+//    public final void setOptions(InvestigatorFactory<R, F, ? extends Investigator<R, F>> factory, InvestigatorOptions options) {
+//        setRequestClass(factory.getRequestClass());
+//        factClass = factory.getFactClass();
+//        if (options != null) {
+//            functionClasses = options.functions();
+//            dependencies = Arrays.stream(options.dependsOn()).collect(Collectors.toSet());
+//        } else {
+//            dependencies = Collections.emptySet();
+//        }
+//    }
+
+//    @Override
+//    public final Class<F> getFactClass() {
+//        return factClass;
+//    }
+
+//    @Override
+//    public boolean dependsOn(Collection<? extends Investigator<R, ?>> investigators) {
+//        ArgumentUtilities.validateIfNotNull(investigators);
+//        return !dependencies.isEmpty() && investigators.stream()
+//                .map(Object::getClass)
+//                .anyMatch(dependencies::contains);
+//    }
 
     @Override
-    public void release() {
-        super.release();
-
-        functions.forEach(Releasable::release);
-    }
-
-    @Override
-    public final void setOptions(InvestigatorFactory<R, F, ? extends Investigator<R, F>> factory, InvestigatorOptions options) {
-        setRequestClass(factory.getRequestClass());
-        factClass = factory.getFactClass();
-        if (options != null) {
-            functionClasses = options.functions();
-            dependencies = Arrays.stream(options.dependsOn()).collect(Collectors.toSet());
-        } else {
-            dependencies = Collections.emptySet();
-        }
-    }
-
-    @Override
-    public final Class<F> getFactClass() {
-        return factClass;
-    }
-
-    @Override
-    public boolean dependsOn(Collection<? extends Investigator<R, ?>> investigators) {
-        ArgumentUtilities.validateIfNotNull(investigators);
-        return !dependencies.isEmpty() && investigators.stream()
-                .map(Object::getClass)
-                .anyMatch(dependencies::contains);
-    }
-
-    @Override
-    public final void setSession(RulesSession session) {
-        ArgumentUtilities.validateIfNotNull(session);
+    public final void setSession(RuleSession session) {
+//        ArgumentUtilities.validateIfNotNull(session);
         this.session = session;
     }
 
-    @Override
-    public void setTrace(Trace trace) {
-        parentTrace = trace;
-    }
+//    @Override
+//    public void setTrace(Trace trace) {
+//        parentTrace = trace;
+//    }
 
     @Override
     @SuppressWarnings("squid:S1181")
     protected final void doRun() {
-        ThreadContext.put("Request", getContext().getId());
-        Trace trace = Trace.start(getName());
-        try {
-            if (parentTrace != null) {
-                // If a parent trace has been provided (from another Thread), attach to it
-                trace.attach(parentTrace);
-            }
+//        ThreadContext.put("Request", getContext().getId());
+//        Trace trace = Trace.start(getName());
+//        try {
+//            if (parentTrace != null) {
+//                 If a parent trace has been provided (from another Thread), attach to it
+//                trace.attach(parentTrace);
+//            }
             gatherFacts();
-        } catch (Throwable e) {
-            LOG.debug("Investigator '" + getName() + "' terminated by an exception", e);
-            if (getContext().isStopped() && ExceptionUtilities.containsTypeOf(e, InterruptedException.class)) {
+//        } catch (Throwable e) {
+//            LOG.debug("Investigator '" + getName() + "' terminated by an exception", e);
+//            if (getContext().isStopped() && ExceptionUtilities.containsTypeOf(e, InterruptedException.class)) {
                 // If the run is cancelled externally, return from interruptions without complaint
                 // Re-interrupt to terminate the arbiter, in case it is running single-threaded
-                Thread.currentThread().interrupt();
-                LOG.info(getName() + " was interrupted during investigation: " + ExceptionUtilities.getRootCause(e).getMessage());
-                return;
-            }
+//                Thread.currentThread().interrupt();
+//                LOG.info(getName() + " was interrupted during investigation: " + ExceptionUtilities.getRootCause(e).getMessage());
+//                return;
+//            }
             // If not, allow the exception to propagate up
-            throw e;
-        } finally {
-            LOG.debug("Investigator '" + getName() + "' finished");
-            trace.stop();
-        }
+//            throw e;
+//        } finally {
+//            LOG.debug("Investigator '" + getName() + "' finished");
+//            trace.stop();
+//        }
     }
 
     @Override
     public final void gatherFacts() {
-        if (session == null) {
-            throw new IllegalStateException("Session must be set before facts can be gathered");
-        }
-        if (!enabled) {
-            LOG.info(getName() + " is disabled by configuration");
-            return;
-        }
+//        if (session == null) {
+//            throw new IllegalStateException("Session must be set before facts can be gathered");
+//        }
+//        if (!enabled) {
+//            LOG.info(getName() + " is disabled by configuration");
+//            return;
+//        }
 
-        Context context = getContext();
+//        Context context = getContext();
         context.startFacts(factClass);
         Trace.doWithTask("Before Gather", v -> beforeGather());
         Trace.doWithTask("Gather", v -> doGather());

@@ -1,21 +1,21 @@
 package com.example.rules.spi;
 
-import com.daxtechnologies.database.orm.activerecord.ActiveRecord;
-import com.spirent.cem.rules.api.RulesResult;
-import com.spirent.cem.rules.spi.arbiter.Arbiter;
-import com.spirent.cem.rules.spi.session.RulesSession;
+//import com.daxtechnologies.database.orm.activerecord.ActiveRecord;
+import com.example.rules.api.RuleResult;
+import com.example.rules.spi.arbiter.Arbiter;
+import com.example.rules.spi.session.RuleSession;
 
 /**
  * A context containing information about a rules run
  */
-public interface Context extends RulesContext {
+public interface Context extends RuleContext {
 
     /**
      * Updates the RulesResult, making it available to service calls
      *
      * @param result the RulesResult to provide
      */
-    void setResult(RulesResult result);
+    void setResult(RuleResult result);
 
     /**
      * Sets an arbitrary attribute in the Context, available to all later processors
@@ -25,15 +25,15 @@ public interface Context extends RulesContext {
      */
     void setAttribute(String name, Object value);
 
-    /**
-     * Resolves an ActiveRecord by primary key
-     *
-     * @param recordType the ActiveRecord Class
-     * @param key        the primary key of the record
-     * @param <R>        the ActiveRecord Class
-     * @return an ActiveRecord, or null if no match exists
-     */
-    <R extends ActiveRecord<R>> R resolveDimension(Class<R> recordType, Object key);
+//    /**
+//     * Resolves an ActiveRecord by primary key
+//     *
+//     * @param recordType the ActiveRecord Class
+//     * @param key        the primary key of the record
+//     * @param <R>        the ActiveRecord Class
+//     * @return an ActiveRecord, or null if no match exists
+//     */
+//    <R extends ActiveRecord<R>> R resolveDimension(Class<R> recordType, Object key);
 
     /**
      * Gets a count of the asserted rules
@@ -78,7 +78,7 @@ public interface Context extends RulesContext {
      * @param clazz   the Arbiter class
      * @param session the RulesSession that ran the rules
      */
-    <A extends Arbiter<?, ?>> void finishRules(Class<A> clazz, RulesSession session);
+    <A extends Arbiter<?, ?>> void finishRules(Class<A> clazz, RuleSession session);
 
     /**
      * Gets a count of inserted facts

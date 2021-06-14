@@ -1,6 +1,6 @@
 package com.example.rules.spi.session;
 
-import com.daxtechnologies.oam.ILogger;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
 import java.util.EventListener;
@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 /**
  * Provides access to a set of rules, including insertion of facts, global access, and rule execution
  */
-public interface RulesSession extends AutoCloseable {
+public interface RuleSession extends AutoCloseable {
 
     /**
      * Inserts a Fact into the session's working memory
@@ -94,7 +94,7 @@ public interface RulesSession extends AutoCloseable {
      *
      * @param log the ILogger to use for the session
      */
-    void setLogger(ILogger log);
+    void setLogger(Logger log);
 
     /**
      * Returns a Map of Rule IDs with a count of the times each was triggered

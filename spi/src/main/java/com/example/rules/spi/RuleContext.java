@@ -1,12 +1,12 @@
 package com.example.rules.spi;
 
-import com.spirent.cem.rules.api.FactStatistic;
-import com.spirent.cem.rules.api.RulesRequest;
-import com.spirent.cem.rules.api.RulesResult;
+import com.example.rules.api.FactStatistic;
+import com.example.rules.api.RuleRequest;
+import com.example.rules.api.RuleResult;
 
 import java.util.Map;
 
-public interface RulesContext {
+public interface RuleContext {
 
     /**
      * Returns the ID of the run to which this Context applies
@@ -20,14 +20,14 @@ public interface RulesContext {
      *
      * @return the current RulesRequest
      */
-    <T extends RulesRequest> T getRequest();
+    <T extends RuleRequest> T getRequest();
 
     /**
      * Retrieves the current RulesResult, can be null if no result has been set yet
      *
      * @return the current RulesResult
      */
-    <T extends RulesResult> T getResult();
+    <T extends RuleResult> T getResult();
 
     /**
      * Retrieves an arbitrary attribute previously set

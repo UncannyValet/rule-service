@@ -1,24 +1,18 @@
 package com.example.rules.spi.arbiter;
 
 import com.example.rules.api.RuleRequest;
+import com.example.rules.api.RuleResult;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 
-@Service
-public class ArbiterRegistry {
+public interface ArbiterRegistry {
 
-    private List<Arbiter<?, ?>> arbiters;
-    private Map<Class<? extends RuleRequest>, Arbiter<?, ?>> arbiterMap;
+    Class<? extends RuleResult> getResultClass(RuleRequest request);
 
-    public ArbiterRegistry(List<Arbiter<?, ?>> arbiters) {
-        this.arbiters = arbiters;
-    }
+    Class<? extends RuleResult> getResultClass(Class<? extends RuleRequest> requestClass);
 
-    @PostConstruct
-    public void mapArbiters() {
-        // Extract request classes and put in the map
-    }
+    <R extends RuleRequest, A extends Arbiter<R, ? extends RuleResult>> A getArbiter(R request);
 }

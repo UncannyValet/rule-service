@@ -13,6 +13,7 @@ import com.daxtechnologies.services.trace.Trace;
 import com.daxtechnologies.util.ArgumentUtilities;
 import com.daxtechnologies.util.StringUtils;
 import com.daxtechnologies.util.collection.MapFactory;
+import com.example.rules.api.RuleRequest;
 import com.spirent.cem.rules.api.RulesRequest;
 import com.spirent.cem.rules.api.RulesResult;
 import com.spirent.cem.rules.spi.arbiter.Arbiter;
@@ -27,12 +28,12 @@ import java.util.*;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
-@Named("Rules Service")
-public abstract class RulesService extends AbstractService implements com.spirent.cem.rules.api.RulesService {
+//@Named("Rules Service")
+public abstract class RulesService /*extends AbstractService*/ implements com.example.rules.api.RuleService {
 
     protected static final ILogger LOG = TheLogger.getInstance(RulesService.class);
 
-    private final Map<Class<? extends RulesRequest>, BiConsumer<? extends RulesRequest, RulesContext>> successCallbacks = MapFactory.concurrent();
+    private final Map<Class<? extends RulesRequest>, BiConsumer<? extends RulesRequest, RuleContext>> successCallbacks = MapFactory.concurrent();
     private com.spirent.cem.rules.spi.ProcessorRegistry registry;
     private DimensionManager dimensionManager;
     private final Set<String> requests = new HashSet<>();
@@ -172,7 +173,7 @@ public abstract class RulesService extends AbstractService implements com.spiren
      * @param requestClass the RulesRequest class
      * @return a non-null Collection of registered session IDs for the given class
      */
-    public Collection<String> getRegisteredSessions(Class<? extends RulesRequest> requestClass) {
+    public Collection<String> getRegisteredSessions(Class<? extends RuleRequest> requestClass) {
         synchronized (registeredSessions) {
             Collection<String> sessions = registeredSessions.get(requestClass);
             if (sessions == null) {
@@ -227,7 +228,7 @@ public abstract class RulesService extends AbstractService implements com.spiren
      * @param callback     a BiConsumer class that takes a request and its associated result
      * @param <T>          the type of RulesRequest to handle
      */
-    public <T extends RulesRequest> void onRequestSuccess(Class<T> requestClass, BiConsumer<? extends RulesRequest, RulesContext> callback) {
+    public <T extends RulesRequest> void onRequestSuccess(Class<T> requestClass, BiConsumer<? extends RulesRequest, RuleContext> callback) {
         successCallbacks.put(requestClass, callback);
     }
 
@@ -237,12 +238,12 @@ public abstract class RulesService extends AbstractService implements com.spiren
      * @param request the RulesRequest
      * @param context the rules run context
      */
-    public <T extends RulesRequest> void handleSuccess(T request, RulesContext context) {
+    public <T extends RulesRequest> void handleSuccess(T request, RuleContext context) {
         Class<? extends RulesRequest> requestClass = request.getClass();
-        BiConsumer<? extends RulesRequest, RulesContext> callback = successCallbacks.get(requestClass);
+        BiConsumer<? extends RulesRequest, RuleContext> callback = successCallbacks.get(requestClass);
         if (callback != null) {
             @SuppressWarnings("unchecked")
-            BiConsumer<T, RulesContext> c = (BiConsumer<T, RulesContext>)callback;
+            BiConsumer<T, RuleContext> c = (BiConsumer<T, RuleContext>)callback;
             Trace.doWithTask(request.getName() + " handler", v -> c.accept(request, context));
         }
     }
@@ -264,7 +265,7 @@ public abstract class RulesService extends AbstractService implements com.spiren
      * @param request the RulesRequest
      * @return a Collection of Investigators matching the request
      */
-    public <R extends RulesRequest> Collection<Investigator<R, ?>> getInvestigators(R request) {
+    public <R extends RuleRequest> Collection<Investigator<R, ?>> getInvestigators(R request) {
         return registry.getInvestigators(request);
     }
 

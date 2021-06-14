@@ -1,6 +1,6 @@
 package com.example.rules.spi.compiler;
 
-import com.example.rules.spi.session.RulesSession;
+import com.example.rules.spi.session.RuleSession;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public interface RulePackage {
      *
      * @return a new RulesSession
      */
-    RulesSession getSession();
+    RuleSession getSession();
 
     interface Builder {
 

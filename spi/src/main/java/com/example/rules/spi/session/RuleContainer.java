@@ -1,6 +1,6 @@
 package com.example.rules.spi.session;
 
-import com.spirent.cem.rules.api.RuleInfo;
+import com.example.rules.api.RuleInfo;
 
 import java.util.Set;
 import java.util.stream.Stream;
@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 /**
  * Functionality for an object that provides RulesSessions
  */
-public interface RulesContainer {
+public interface RuleContainer {
 
     /**
      * Returns the ID of the container.
@@ -26,7 +26,7 @@ public interface RulesContainer {
      * @param sessionId the ID of the RulesSession
      * @return a new RulesSession
      */
-    RulesSession newSession(String sessionId);
+    RuleSession newSession(String sessionId);
 
     /**
      * Returns a Stream of the RuleInfo stored in this container.
