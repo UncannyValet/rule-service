@@ -1,7 +1,7 @@
 package com.example.rules.core.investigator;
 
 import com.example.rules.api.RuleRequest;
-import com.example.rules.spi.Context;
+import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.investigator.Investigator;
 import com.example.rules.spi.investigator.InvestigatorFactory;
@@ -34,12 +34,12 @@ public class InvestigatorFactoryImpl implements InvestigatorFactory, Application
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public <R extends RuleRequest> Collection<Investigator<R, ?>> getInvestigators(Context context) {
+    public <R extends RuleRequest> Collection<Investigator<R, ?>> getInvestigators(RuleContext context) {
         Set<Class<? extends Investigator>> investigatorClasses = investigatorMap.get(context.getRequest().getClass());
         if (investigatorClasses != null) {
             return investigatorClasses.stream()
                     .map(c -> (Class<? extends Investigator<R, ?>>)c)
-                    .map(applicationContext::getBean)
+                    .map(c -> applicationContext.getBean(c, context))
                     .collect(Collectors.toList());
         } else {
             return Collections.emptySet();

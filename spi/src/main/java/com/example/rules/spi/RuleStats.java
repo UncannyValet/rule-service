@@ -1,63 +1,12 @@
 package com.example.rules.spi;
 
 import com.example.rules.api.FactStatistic;
-import com.example.rules.api.RuleRequest;
-import com.example.rules.api.RuleResult;
 import com.example.rules.spi.arbiter.Arbiter;
-import com.example.rules.spi.investigator.Investigator;
 import com.example.rules.spi.session.RuleSession;
 
 import java.util.Map;
-import java.util.concurrent.Future;
 
-/**
- * A context containing information about a rules run
- */
-public interface Context {
-
-    /**
-     * Returns the ID of the run to which this Context applies
-     *
-     * @return the ID of the run to
-     */
-    String getId();
-
-    /**
-     * Retrieves the RulesRequest for this session
-     *
-     * @return the current RulesRequest
-     */
-    <T extends RuleRequest> T getRequest();
-
-    /**
-     * Retrieves the current RulesResult, can be null if no result has been set yet
-     *
-     * @return the current RulesResult
-     */
-    <T extends RuleResult> T getResult();
-
-    /**
-     * Updates the RulesResult, making it available to service calls
-     *
-     * @param result the RulesResult to provide
-     */
-    void setResult(RuleResult result);
-
-    /**
-     * Sets an arbitrary attribute in the Context, available to all later processors
-     *
-     * @param name  the name of the attribute
-     * @param value the value to set
-     */
-    void setAttribute(String name, Object value);
-
-    /**
-     * Retrieves an arbitrary attribute previously set
-     *
-     * @param name the name of the attribute
-     * @return the attribute value, or null if not set
-     */
-    <T> T getAttribute(String name);
+public interface RuleStats {
 
     /**
      * Returns a Map of Rule IDs and their assertion count
@@ -72,18 +21,6 @@ public interface Context {
      * @return a Map of fact classes and their count and duration
      */
     Map<String, FactStatistic> getFactStatistics();
-
-    /**
-     * Resolves a dimension by ID
-     *
-     * @param dimensionClass the dimension Class
-     * @param id             the id of the dimension entry
-     * @param <R>            the dimension Class
-     * @return a dimension entry, or null if no match exists
-     */
-    <R> R resolveDimension(Class<R> dimensionClass, Object id);
-
-    <R extends RuleRequest> Future<Investigator<R, ?>> scheduleInvestigation(Investigator<R, ?> investigator, RuleSession session);
 
     /**
      * Gets a count of the asserted rules
@@ -174,16 +111,4 @@ public interface Context {
      * @param count     the total count of inserted facts
      */
     void finishFacts(Class<?> factClass, int count);
-
-    /**
-     * Marks the Context as stopped, indicating that the underlying run has been cancelled
-     */
-    void stop();
-
-    /**
-     * Indicates whether this context has been marked as stopped
-     *
-     * @return {@code true} if stop() has been called, {@code false} otherwise
-     */
-    boolean isStopped();
 }

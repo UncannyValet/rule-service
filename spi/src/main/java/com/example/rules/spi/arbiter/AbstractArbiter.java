@@ -3,24 +3,21 @@ package com.example.rules.spi.arbiter;
 import com.example.rules.api.RuleException;
 import com.example.rules.api.RuleRequest;
 import com.example.rules.api.RuleResult;
-import com.example.rules.spi.Context;
-import com.example.rules.spi.investigator.Investigator;
-import com.example.rules.spi.investigator.InvestigatorFactory;
+import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.session.RuleCancellationEvent;
 import com.example.rules.spi.session.RuleSession;
-import com.example.rules.spi.session.SessionFactory;
 import com.example.rules.spi.utils.ClassUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.event.EventListener;
 
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static com.example.rules.api.ErrorNumbers.INVESTIGATOR_FAILURE;
 import static com.example.rules.api.ErrorNumbers.PROCESS_FAILURE;
+import static com.example.rules.api.ErrorNumbers.RESULT_INSTANTIATION;
 
 /**
  * An abstract implementation of the Arbiter interface, to minimize the effort required to implement this interface
@@ -36,30 +33,28 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
 
     protected final Logger LOG = LogManager.getLogger(getClass());
 
-    private final Context context;
-    private final InvestigatorFactory investigatorFactory;
-    private final SessionFactory sessionFactory;
+    private final RuleContext context;
     private final String[] ruleSets;
-
     private final O result;
 
     private volatile RuleSession runningSession;
 
-    public AbstractArbiter(Context context, InvestigatorFactory investigatorFactory, SessionFactory sessionFactory) {
+    public AbstractArbiter(RuleContext context) {
         this.context = context;
-        this.investigatorFactory = investigatorFactory;
-        this.sessionFactory = sessionFactory;
 
         // Set result, creating one if not available
+        @SuppressWarnings("unchecked")
+        Class<O> resultClass = (Class<O>)resultClasses.computeIfAbsent(getClass(), clazz -> ClassUtils.getTypeArgument(clazz, Arbiter.class, 1));
+        if (resultClass == null) {
+            throw new RuleException(RESULT_INSTANTIATION);
+        }
         RuleResult r = context.getResult();
         if (r == null) {
-            @SuppressWarnings("unchecked")
-            Class<O> resultClass = (Class<O>)resultClasses.computeIfAbsent(getClass(), clazz -> ClassUtils.getTypeArgument(clazz, Arbiter.class, 1));
             result = ClassUtils.instantiate(resultClass);
         } else {
             // Copy the result using serialization
             // Intermediate updates by rules must not interfere with API calls to retrieve the result
-            result = (O)SerializationUtils.clone(r);
+            result = resultClass.cast(SerializationUtils.clone(r));
         }
 
         ruleSets = ruleSetMap.computeIfAbsent(getClass(), clazz -> {
@@ -68,7 +63,7 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
         });
     }
 
-    protected final Context getContext() {
+    protected final RuleContext getContext() {
         return context;
     }
 
@@ -105,19 +100,18 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
         return result;
     }
 
-    @SuppressWarnings("squid:S00112")
     private void runSession() {
-        try (RuleSession session = sessionFactory.getSession(context.getRequest(), ruleSets)) {
+        try (RuleSession session = context.newSession(ruleSets)) {
             // Don't bother running if no rules are defined for the session
             int totalRules = session.getRuleCount();
             if (totalRules > 0) {
                 session.setLogger(LOG);
                 beforeFacts(session);
                 LOG.info("Gathering facts...");
-                investigate(session);
-                beforeRules(session);
+                context.investigate(session);
                 LOG.info("Fact gathering complete");
                 context.getFactStatistics().forEach((type, stats) -> LOG.info("- " + type + ": " + stats.getCount() + " fact(s) in " + stats.getDuration() + " ms"));
+                beforeRules(session);
                 LOG.info("Running " + totalRules + " rule(s) over " + session.getFactCount() + " fact(s)...");
                 context.startRules(getClass());
                 runningSession = session;
@@ -134,36 +128,36 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
         }
     }
 
-    /**
-     * Spawns Investigators in parallel to gather facts, accounting for dependencies if any exist
-     */
-    private void investigate(RuleSession session) {
-        Set<Investigator<R, ?>> currentInvestigators = new HashSet<>(investigatorFactory.getInvestigators(context));
-
-        // Run investigators, delaying those with dependencies until the dependencies have completed
-        while (!currentInvestigators.isEmpty()) {
-            List<Future<Investigator<R, ?>>> futures = currentInvestigators.stream()
-                    .filter(i -> !i.dependsOn(currentInvestigators))
-                    .map(i -> context.scheduleInvestigation(i, session))
-                    .collect(Collectors.toList());
-
-            futures.forEach(future -> {
-                try {
-                    currentInvestigators.remove(future.get());
-                } catch (InterruptedException e) {
-                    if (context.isStopped()) {
-                        // Request cancelled, cancel spawned investigators as well
-                        futures.forEach(f -> f.cancel(true));
-                        Thread.currentThread().interrupt();
-                    } else {
-                        throw new RuleException(e, INVESTIGATOR_FAILURE);
-                    }
-                } catch (ExecutionException e) {
-                    throw new RuleException(e, INVESTIGATOR_FAILURE);
-                }
-            });
-        }
-    }
+//    /**
+//     * Spawns Investigators in parallel to gather facts, accounting for dependencies if any exist
+//     */
+//    private void investigate(RuleSession session) {
+//        Set<Investigator<R, ?>> currentInvestigators = new HashSet<>(investigatorFactory.getInvestigators(context));
+//
+//        // Run investigators, delaying those with dependencies until the dependencies have completed
+//        while (!currentInvestigators.isEmpty()) {
+//            List<Future<Investigator<R, ?>>> futures = currentInvestigators.stream()
+//                    .filter(i -> !i.dependsOn(currentInvestigators))
+//                    .map(i -> context.scheduleInvestigation(i, session))
+//                    .collect(Collectors.toList());
+//
+//            futures.forEach(future -> {
+//                try {
+//                    currentInvestigators.remove(future.get());
+//                } catch (InterruptedException e) {
+//                    if (context.isStopped()) {
+//                        // Request cancelled, cancel spawned investigators as well
+//                        futures.forEach(f -> f.cancel(true));
+//                        Thread.currentThread().interrupt();
+//                    } else {
+//                        throw new RuleException(e, INVESTIGATOR_FAILURE);
+//                    }
+//                } catch (ExecutionException e) {
+//                    throw new RuleException(e, INVESTIGATOR_FAILURE);
+//                }
+//            });
+//        }
+//    }
 
     /**
      * Listener to process session cancellations, stopping the rule session if it is in progress
@@ -176,12 +170,6 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
         }
     }
 
-//    private static void checkInterrupt() {
-//        if (Thread.interrupted()) {
-//            throw new CancellationException();
-//        }
-//    }
-
     /**
      * Override in subclasses to execute code before the RulesSession is opened
      */
@@ -191,7 +179,7 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
     /**
      * Override in subclasses to execute code before facts are inserted into the RulesSession
      *
-     * @param session the active RulesSession
+     * @param session the active RuleSession
      */
     protected void beforeFacts(RuleSession session) {
     }
@@ -199,7 +187,7 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
     /**
      * Override in subclasses to execute code before rules are executed
      *
-     * @param session the active RulesSession
+     * @param session the active RuleSession
      */
     protected void beforeRules(RuleSession session) {
     }
@@ -207,13 +195,13 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
     /**
      * Override in subclasses to execute code after rules have completed
      *
-     * @param session the active RulesSession
+     * @param session the active RuleSession
      */
     protected void afterRules(RuleSession session) {
     }
 
     /**
-     * Override in subclasses to execute code after the RulesSession is closed
+     * Override in subclasses to execute code after the RuleSession is closed
      */
     protected void afterSession() {
     }

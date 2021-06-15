@@ -1,7 +1,7 @@
 package com.example.rules.spi.investigator;
 
 import com.example.rules.api.RuleRequest;
-import com.example.rules.spi.Context;
+import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.session.RuleSession;
 import com.example.rules.spi.utils.ClassUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
@@ -27,7 +27,7 @@ public abstract class AbstractInvestigator<R extends RuleRequest, F> implements 
     private static final Map<Class<?>, Set<Class<? extends Investigator<?, ?>>>> dependencyMap = new ConcurrentHashMap<>();
     private static final Map<Class<?>, Class<?>> factClasses = new ConcurrentHashMap<>();
 
-    private final Context context;
+    private final RuleContext context;
     private final Class<?> factClass;
     private final boolean isDebug;
     private final Map<String, MutableLong> debugTiming = new LinkedHashMap<>();
@@ -36,7 +36,7 @@ public abstract class AbstractInvestigator<R extends RuleRequest, F> implements 
     private RuleSession session;
     private int factCount;
 
-    protected AbstractInvestigator(Context context) {
+    public AbstractInvestigator(RuleContext context) {
         this.context = context;
         isDebug = LOG.isDebugEnabled();
 
@@ -95,17 +95,17 @@ public abstract class AbstractInvestigator<R extends RuleRequest, F> implements 
     }
 
     @Override
-    public boolean dependsOn(Collection<? extends Investigator<R, ?>> investigators) {
+    public final boolean dependsOn(Collection<? extends Investigator<R, ?>> investigators) {
         return !dependencies.isEmpty() && investigators.stream()
                 .map(Object::getClass)
                 .anyMatch(dependencies::contains);
     }
 
-    protected final Context getContext() {
+    protected final RuleContext getContext() {
         return context;
     }
 
-    protected void time(String name, Consumer<?> action) {
+    protected final void time(String name, Consumer<?> action) {
         if (isDebug) {
             try {
                 startTiming(name);
@@ -124,10 +124,8 @@ public abstract class AbstractInvestigator<R extends RuleRequest, F> implements 
      * @param name the operation name
      */
     private void startTiming(String name) {
-        if (isDebug) {
-            MutableLong value = debugTiming.computeIfAbsent(name, k -> new MutableLong());
-            value.setValue(value.longValue() - System.nanoTime());
-        }
+        MutableLong value = debugTiming.computeIfAbsent(name, k -> new MutableLong());
+        value.setValue(value.longValue() - System.nanoTime());
     }
 
     /**
@@ -136,11 +134,9 @@ public abstract class AbstractInvestigator<R extends RuleRequest, F> implements 
      * @param name the operation name
      */
     private void endTiming(String name) {
-        if (isDebug) {
-            MutableLong value = debugTiming.get(name);
-            if (value != null) {
-                value.setValue(value.longValue() + System.nanoTime());
-            }
+        MutableLong value = debugTiming.get(name);
+        if (value != null) {
+            value.setValue(value.longValue() + System.nanoTime());
         }
     }
 

@@ -2,7 +2,7 @@ package com.example.rules.core.arbiter;
 
 import com.example.rules.api.RuleRequest;
 import com.example.rules.api.RuleResult;
-import com.example.rules.spi.Context;
+import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.arbiter.ArbiterFactory;
 import com.example.rules.spi.utils.ClassUtils;
@@ -55,10 +55,10 @@ public class ArbiterFactoryImpl implements ArbiterFactory, ApplicationContextAwa
     }
 
     @Override
-    public <R extends RuleRequest, A extends Arbiter<R, ? extends RuleResult>> A getArbiter(Context context) {
+    public <R extends RuleRequest, A extends Arbiter<R, ? extends RuleResult>> A getArbiter(RuleContext context) {
         @SuppressWarnings("unchecked")
         Class<A> arbiterClass = (Class<A>)arbiterMap.get(context.getRequest().getClass());
-        return arbiterClass != null ? applicationContext.getBean(arbiterClass) : null;
+        return arbiterClass != null ? applicationContext.getBean(arbiterClass, context) : null;
     }
 
     @Override
