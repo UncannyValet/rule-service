@@ -4,10 +4,8 @@ import com.example.rules.api.RuleRequest;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.investigator.Investigator;
-import com.example.rules.spi.investigator.InvestigatorFactory;
 import com.example.rules.spi.utils.ClassUtils;
 import org.atteo.classindex.ClassIndex;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
@@ -47,7 +45,7 @@ public class InvestigatorFactoryImpl implements InvestigatorFactory, Application
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 }

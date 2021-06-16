@@ -1,7 +1,8 @@
-package com.example.rules.spi.investigator;
+package com.example.rules.core.investigator;
 
 import com.example.rules.api.RuleRequest;
 import com.example.rules.spi.RuleContext;
+import com.example.rules.spi.investigator.Investigator;
 
 import java.util.Collection;
 

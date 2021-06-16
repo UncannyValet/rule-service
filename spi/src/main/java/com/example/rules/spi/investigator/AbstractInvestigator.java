@@ -95,7 +95,7 @@ public abstract class AbstractInvestigator<R extends RuleRequest, F> implements 
     }
 
     @Override
-    public final boolean dependsOn(Collection<? extends Investigator<R, ?>> investigators) {
+    public final boolean dependsOn(Collection<? extends Investigator<?, ?>> investigators) {
         return !dependencies.isEmpty() && investigators.stream()
                 .map(Object::getClass)
                 .anyMatch(dependencies::contains);

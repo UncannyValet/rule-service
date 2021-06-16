@@ -25,13 +25,20 @@ public interface RuleService {
     <T extends RuleResult> T run(RuleRequest request);
 
     /**
-     * Executes a synchronous rule run against a given request, using a provided ID
+     * Returns the result of a rule run
      *
-     * @param id      a manually provided ID to track the run, must be unique
-     * @param request the RuleRequest
-     * @return the RuleResult of the run
+     * @param ruleId the ID of a rule run
+     * @return the RuleResult of the action (which may be partially complete), or {@code null} if the run is either expired or never scheduled
      */
-    <T extends RuleResult> T run(String id, RuleRequest request);
+    <T extends RuleResult> T getResult(long ruleId);
+
+    /**
+     * Returns the ID of a rule run request previously executed on this request
+     *
+     * @param request the RuleRequest
+     * @return the ID of the run, or -1 if the run is either expired or never scheduled
+     */
+    long findId(RuleRequest request);
 
     /**
      * Retrieves a Collection of known Request fully-qualified class names
@@ -65,28 +72,12 @@ public interface RuleService {
 //    Action.State getStatus(String ruleId);
 
     /**
-     * Returns the result of a rule run
-     *
-     * @param ruleId the ID of a rule run
-     * @return the RuleResult of the action (which may be partially complete), or {@code null} if the run is either expired or never scheduled
-     */
-    <T extends RuleResult> T getResult(String ruleId);
-
-    /**
      * Cancels a rule run
      *
      * @param ruleId the ID of an in-progress rule run
      * @return {@code true} if a local run was found and cancelled, {@code false} otherwise
      */
-    boolean cancel(String ruleId);
-
-    /**
-     * Returns the ID of a rule run request previously executed on this request
-     *
-     * @param request the RuleRequest
-     * @return the ID of the run, or null if the run is either expired or never scheduled
-     */
-    String findId(RuleRequest request);
+    boolean cancel(long ruleId);
 
     /**
      * Returns a Collection of RuleInfo for all of the rule objects known by this instance

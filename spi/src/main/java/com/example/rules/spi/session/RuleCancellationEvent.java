@@ -4,15 +4,15 @@ import org.springframework.context.ApplicationEvent;
 
 public class RuleCancellationEvent extends ApplicationEvent {
 
-    private final String sessionId;
+    private final long sessionId;
 
-    public RuleCancellationEvent(Object source, String sessionId) {
+    public RuleCancellationEvent(Object source, long sessionId) {
         super(source);
 
         this.sessionId = sessionId;
     }
 
-    public String getSessionId() {
+    public long getSessionId() {
         return sessionId;
     }
 }

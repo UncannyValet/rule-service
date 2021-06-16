@@ -25,7 +25,7 @@ public interface Investigator<R extends RuleRequest, F> {
      * @param investigators the Set of investigators
      * @return {@code true} if a dependency exists, {@code false} otherwise
      */
-    default boolean dependsOn(Collection<? extends Investigator<R, ?>> investigators) {
+    default boolean dependsOn(Collection<? extends Investigator<?, ?>> investigators) {
         return false;
     }
 }

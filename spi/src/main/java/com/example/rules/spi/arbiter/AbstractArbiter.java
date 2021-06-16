@@ -128,44 +128,13 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
         }
     }
 
-//    /**
-//     * Spawns Investigators in parallel to gather facts, accounting for dependencies if any exist
-//     */
-//    private void investigate(RuleSession session) {
-//        Set<Investigator<R, ?>> currentInvestigators = new HashSet<>(investigatorFactory.getInvestigators(context));
-//
-//        // Run investigators, delaying those with dependencies until the dependencies have completed
-//        while (!currentInvestigators.isEmpty()) {
-//            List<Future<Investigator<R, ?>>> futures = currentInvestigators.stream()
-//                    .filter(i -> !i.dependsOn(currentInvestigators))
-//                    .map(i -> context.scheduleInvestigation(i, session))
-//                    .collect(Collectors.toList());
-//
-//            futures.forEach(future -> {
-//                try {
-//                    currentInvestigators.remove(future.get());
-//                } catch (InterruptedException e) {
-//                    if (context.isStopped()) {
-//                        // Request cancelled, cancel spawned investigators as well
-//                        futures.forEach(f -> f.cancel(true));
-//                        Thread.currentThread().interrupt();
-//                    } else {
-//                        throw new RuleException(e, INVESTIGATOR_FAILURE);
-//                    }
-//                } catch (ExecutionException e) {
-//                    throw new RuleException(e, INVESTIGATOR_FAILURE);
-//                }
-//            });
-//        }
-//    }
-
     /**
      * Listener to process session cancellations, stopping the rule session if it is in progress
      */
     @EventListener(RuleCancellationEvent.class)
     public void onCancellationEvent(RuleCancellationEvent event) {
         RuleSession session = runningSession;
-        if (session != null && context.getId().equals(event.getSessionId())) {
+        if (session != null && context.getId() == event.getSessionId()) {
             session.halt();
         }
     }

@@ -5,7 +5,7 @@ import com.example.rules.api.RuleResult;
 import com.example.rules.spi.session.RuleSession;
 
 /**
- * A context containing information about a rules run
+ * A context containing information about a rule run
  */
 public interface RuleContext extends RuleStats {
 
@@ -14,7 +14,7 @@ public interface RuleContext extends RuleStats {
      *
      * @return the ID of the run to
      */
-    String getId();
+    long getId();
 
     /**
      * Retrieves the RulesRequest for this session
@@ -63,8 +63,17 @@ public interface RuleContext extends RuleStats {
      */
     <R> R resolveDimension(Class<R> dimensionClass, Object id);
 
+    /**
+     * Creates a new RuleSession, based on the sessionIds requested and any other IDs registered with the request
+     *
+     * @param sessionIds the IDs of rule sessions to provide
+     * @return a RuleSession encapsulating sessions for the provided IDs
+     */
     RuleSession newSession(String... sessionIds);
 
+    /**
+     * Spawns Investigators in parallel to gather facts, accounting for dependencies if any exist
+     */
     void investigate(RuleSession session);
 
     /**

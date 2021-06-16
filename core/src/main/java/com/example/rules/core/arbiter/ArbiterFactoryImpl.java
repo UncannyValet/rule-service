@@ -1,21 +1,22 @@
 package com.example.rules.core.arbiter;
 
+import com.example.rules.api.RuleException;
 import com.example.rules.api.RuleRequest;
 import com.example.rules.api.RuleResult;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
-import com.example.rules.spi.arbiter.ArbiterFactory;
 import com.example.rules.spi.utils.ClassUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.atteo.classindex.ClassIndex;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.example.rules.api.ErrorNumbers.ARBITER_NOT_REGISTERED;
 
 @Component
 public class ArbiterFactoryImpl implements ArbiterFactory, ApplicationContextAware {
@@ -58,11 +59,15 @@ public class ArbiterFactoryImpl implements ArbiterFactory, ApplicationContextAwa
     public <R extends RuleRequest, A extends Arbiter<R, ? extends RuleResult>> A getArbiter(RuleContext context) {
         @SuppressWarnings("unchecked")
         Class<A> arbiterClass = (Class<A>)arbiterMap.get(context.getRequest().getClass());
-        return arbiterClass != null ? applicationContext.getBean(arbiterClass, context) : null;
+        if (arbiterClass != null) {
+            return applicationContext.getBean(arbiterClass, context);
+        } else {
+            throw new RuleException(ARBITER_NOT_REGISTERED);
+        }
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 }

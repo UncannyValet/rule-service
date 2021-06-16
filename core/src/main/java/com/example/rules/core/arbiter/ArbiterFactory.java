@@ -1,8 +1,9 @@
-package com.example.rules.spi.arbiter;
+package com.example.rules.core.arbiter;
 
 import com.example.rules.api.RuleRequest;
 import com.example.rules.api.RuleResult;
 import com.example.rules.spi.RuleContext;
+import com.example.rules.spi.arbiter.Arbiter;
 
 public interface ArbiterFactory {
 
