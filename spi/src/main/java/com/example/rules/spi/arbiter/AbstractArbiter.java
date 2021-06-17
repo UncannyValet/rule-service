@@ -4,6 +4,7 @@ import com.example.rules.api.RuleException;
 import com.example.rules.api.RuleRequest;
 import com.example.rules.api.RuleResult;
 import com.example.rules.spi.RuleContext;
+import com.example.rules.spi.RuleStats;
 import com.example.rules.spi.session.RuleCancellationEvent;
 import com.example.rules.spi.session.RuleSession;
 import com.example.rules.spi.utils.ClassUtils;
@@ -105,15 +106,16 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
             // Don't bother running if no rules are defined for the session
             int totalRules = session.getRuleCount();
             if (totalRules > 0) {
+                RuleStats statistics = context.getStats();
                 session.setLogger(LOG);
                 beforeFacts(session);
                 LOG.info("Gathering facts...");
                 context.investigate(session);
                 LOG.info("Fact gathering complete");
-                context.getFactStatistics().forEach((type, stats) -> LOG.info("- " + type + ": " + stats.getCount() + " fact(s) in " + stats.getDuration() + " ms"));
+                statistics.getFactStatistics().forEach((type, stats) -> LOG.info("- " + type + ": " + stats.getCount() + " fact(s) in " + stats.getDuration() + " ms"));
                 beforeRules(session);
                 LOG.info("Running " + totalRules + " rule(s) over " + session.getFactCount() + " fact(s)...");
-                context.startRules(getClass());
+                statistics.startRules(getClass());
                 runningSession = session;
                 int ruleCount;
                 try {
@@ -121,8 +123,8 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
                 } finally {
                     runningSession = null;
                 }
-                context.finishRules(getClass(), session);
-                LOG.info("Rule session complete, " + ruleCount + " rule(s) asserted in " + context.getRuleDuration(this.getClass()) + " ms");
+                statistics.finishRules(getClass(), session);
+                LOG.info("Rule session complete, " + ruleCount + " rule(s) asserted in " + statistics.getRuleDuration(this.getClass()) + " ms");
                 afterRules(session);
             }
         }

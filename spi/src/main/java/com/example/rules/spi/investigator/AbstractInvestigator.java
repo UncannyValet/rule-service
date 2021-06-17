@@ -2,6 +2,7 @@ package com.example.rules.spi.investigator;
 
 import com.example.rules.api.RuleRequest;
 import com.example.rules.spi.RuleContext;
+import com.example.rules.spi.RuleStats;
 import com.example.rules.spi.session.RuleSession;
 import com.example.rules.spi.utils.ClassUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
@@ -58,14 +59,15 @@ public abstract class AbstractInvestigator<R extends RuleRequest, F> implements 
     public final void gatherFacts(RuleSession session) {
         this.session = session;
 
-        context.startFacts(factClass);
+        RuleStats statistics = context.getStats();
+        statistics.startFacts(factClass);
         time("Before Gather", v -> beforeGather());
         time("Gather", v -> doGather());
         time("After Gather", v -> afterGather());
         LOG.info("Investigation complete");
-        context.finishFacts(factClass, factCount);
+        statistics.finishFacts(factClass, factCount);
         if (isDebug) {
-            LOG.debug("Investigator " + getClass() + " - " + context.getFactDuration(factClass) + " gathering " + factClass.getSimpleName()
+            LOG.debug("Investigator " + getClass() + " - " + statistics.getFactDuration(factClass) + " gathering " + factClass.getSimpleName()
                     + " facts" + (debugTiming.isEmpty() ? "" : "\n" +
                     debugTiming.entrySet().stream()
                             .map(e -> " - " + e.getKey() + ": " + e.getValue().longValue() / 1000 + " ms")

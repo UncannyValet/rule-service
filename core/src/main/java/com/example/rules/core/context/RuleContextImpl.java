@@ -1,21 +1,24 @@
 package com.example.rules.core.context;
 
-import com.example.rules.api.*;
+import com.example.rules.api.RuleException;
+import com.example.rules.api.RuleRequest;
+import com.example.rules.api.RuleResult;
 import com.example.rules.core.investigator.InvestigatorFactory;
 import com.example.rules.core.session.SessionFactory;
 import com.example.rules.spi.RuleContext;
-import com.example.rules.spi.arbiter.Arbiter;
+import com.example.rules.spi.RuleStats;
 import com.example.rules.spi.investigator.Investigator;
 import com.example.rules.spi.session.RuleCancellationEvent;
 import com.example.rules.spi.session.RuleSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 
 import static com.example.rules.api.ErrorNumbers.INVESTIGATOR_FAILURE;
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
@@ -32,17 +35,25 @@ public class RuleContextImpl implements RuleContext {
     private final SessionFactory sessionFactory;
     private final InvestigatorFactory investigatorFactory;
 
+    private AsyncTaskExecutor executor;
+
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
     private final Map<Investigator<?, ?>, CompletableFuture<Investigator<?, ?>>> running = new IdentityHashMap<>();
+    private final RuleStats statistics = new RuleStatsImpl();
 
     private RuleResult result;
-    private boolean stopped;
 
     public RuleContextImpl(long id, RuleRequest request, SessionFactory sessionFactory, InvestigatorFactory investigatorFactory) {
         this.id = id;
         this.request = request;
         this.sessionFactory = sessionFactory;
         this.investigatorFactory = investigatorFactory;
+    }
+
+    @Autowired
+    @Qualifier("investigatorPool")
+    public void setExecutor(AsyncTaskExecutor executor) {
+        this.executor = executor;
     }
 
     @Override
@@ -79,8 +90,8 @@ public class RuleContextImpl implements RuleContext {
     }
 
     @Override
-    public <R> R resolveDimension(Class<R> dimensionClass, Object id) {
-        return null;
+    public RuleStats getStats() {
+        return statistics;
     }
 
     @Override
@@ -93,25 +104,25 @@ public class RuleContextImpl implements RuleContext {
         Set<Investigator<?, ?>> waiting = new HashSet<>(investigatorFactory.getInvestigators(this));
 
         // Run investigators, delaying those with dependencies until the dependencies have completed
-        // TODO probably doesn't execute the number of times it should...
         while (!waiting.isEmpty()) {
+            CompletableFuture<Investigator<?, ?>>[] futures;
             synchronized (running) {
                 waiting.stream()
                         .filter(i -> !running.containsKey(i))
                         .filter(i -> !i.dependsOn(waiting))
                         .forEach(i -> running.put(i, schedule(i, session)));
+                futures = running.values().toArray(FUTURE_ARRAY);
             }
 
             try {
-                Investigator<?, ?> o = (Investigator<?, ?>)CompletableFuture.anyOf(running.values().toArray(FUTURE_ARRAY)).get();
-                running.remove(o);
-            } catch (InterruptedException e) {
-                if (isStopped()) {
-                    // Request cancelled, cancel spawned investigators as well
-                    running.values().forEach(f -> f.cancel(true));
-                } else {
-                    throw new RuleException(e, INVESTIGATOR_FAILURE);
+                Investigator<?, ?> o = (Investigator<?, ?>)CompletableFuture.anyOf(futures).get();
+                synchronized (running) {
+                    running.remove(o);
+                    waiting.remove(o);
                 }
+            } catch (InterruptedException | CancellationException e) {
+                // Request cancelled, cancel spawned investigators as well
+                running.values().forEach(f -> f.cancel(true));
             } catch (ExecutionException e) {
                 throw new RuleException(e, INVESTIGATOR_FAILURE);
             }
@@ -122,93 +133,15 @@ public class RuleContextImpl implements RuleContext {
         return CompletableFuture.supplyAsync(() -> {
             investigator.gatherFacts(session);
             return investigator;
-        });
-    }
-
-    @Override
-    public void stop() {
-        stopped = true;
-    }
-
-    @Override
-    public boolean isStopped() {
-        return stopped;
-    }
-
-    @Override
-    public Map<String, Integer> getRuleStatistics() {
-        return null;
-    }
-
-    @Override
-    public Map<String, FactStatistic> getFactStatistics() {
-        return null;
-    }
-
-    @Override
-    public int getRuleCount() {
-        return 0;
-    }
-
-    @Override
-    public <A extends Arbiter<?, ?>> int getRuleCount(Class<A> clazz) {
-        return 0;
-    }
-
-    @Override
-    public long getRuleDuration() {
-        return 0;
-    }
-
-    @Override
-    public <A extends Arbiter<?, ?>> long getRuleDuration(Class<A> arbiterClass) {
-        return 0;
-    }
-
-    @Override
-    public <A extends Arbiter<?, ?>> void startRules(Class<A> arbiterClass) {
-
-    }
-
-    @Override
-    public <A extends Arbiter<?, ?>> void finishRules(Class<A> arbiterClass, RuleSession session) {
-
-    }
-
-    @Override
-    public int getFactCount() {
-        return 0;
-    }
-
-    @Override
-    public int getFactCount(Class<?> factClass) {
-        return 0;
-    }
-
-    @Override
-    public long getFactDuration() {
-        return 0;
-    }
-
-    @Override
-    public long getFactDuration(Class<?> factClass) {
-        return 0;
-    }
-
-    @Override
-    public void startFacts(Class<?> factClass) {
-
-    }
-
-    @Override
-    public void finishFacts(Class<?> factClass, int count) {
-
+        }, executor);
     }
 
     @EventListener(RuleCancellationEvent.class)
     public void onCancellationEvent(RuleCancellationEvent event) {
         if (id == event.getSessionId()) {
-            // TODO cancel running investigators
+            synchronized (running) {
+                running.values().forEach(f -> f.cancel(true));
+            }
         }
     }
 }
