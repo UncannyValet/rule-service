@@ -75,9 +75,8 @@ public interface RuleService {
      * Cancels a rule run
      *
      * @param ruleId the ID of an in-progress rule run
-     * @return {@code true} if a local run was found and cancelled, {@code false} otherwise
      */
-    boolean cancel(long ruleId);
+    void cancel(long ruleId);
 
     /**
      * Returns a Collection of RuleInfo for all of the rule objects known by this instance

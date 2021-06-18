@@ -46,11 +46,6 @@ public class ArbiterFactoryImpl implements ArbiterFactory, ApplicationContextAwa
     }
 
     @Override
-    public Class<? extends RuleResult> getResultClass(RuleRequest request) {
-        return getResultClass(request.getClass());
-    }
-
-    @Override
     public Class<? extends RuleResult> getResultClass(Class<? extends RuleRequest> requestClass) {
         return resultMap.get(requestClass);
     }

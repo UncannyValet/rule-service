@@ -5,6 +5,11 @@ import com.example.rules.core.arbiter.ArbiterFactory;
 import com.example.rules.core.context.RuleContextFactory;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
+import com.example.rules.spi.session.RuleCancellationEvent;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -16,14 +21,28 @@ public class RuleServiceImpl implements RuleService {
     private final ArbiterFactory arbiterFactory;
     private final RuleContextFactory ruleContextFactory;
 
+    private ApplicationEventPublisher applicationEventPublisher;
+    private AsyncTaskExecutor arbiterExecutor;
+
     public RuleServiceImpl(ArbiterFactory arbiterFactory, RuleContextFactory ruleContextFactory) {
         this.arbiterFactory = arbiterFactory;
         this.ruleContextFactory = ruleContextFactory;
     }
 
+    @Autowired
+    public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+        this.applicationEventPublisher = applicationEventPublisher;
+    }
+
+    @Autowired
+    @Qualifier("arbiterPool")
+    public void setArbiterExecutor(AsyncTaskExecutor arbiterExecutor) {
+        this.arbiterExecutor = arbiterExecutor;
+    }
+
     @Override
     public Future<RuleResult> schedule(RuleRequest request) {
-        return null;
+        return arbiterExecutor.submit(() -> run(request));
     }
 
     @Override
@@ -50,17 +69,19 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     public Class<? extends RuleResult> getResultClass(RuleRequest request) {
-        return null;
+        return arbiterFactory.getResultClass(request.getClass());
     }
 
     @Override
     public Class<? extends RuleResult> getResultClass(Class<? extends RuleRequest> requestClass) {
-        return null;
+        return arbiterFactory.getResultClass(requestClass);
     }
 
     @Override
-    public boolean cancel(long ruleId) {
-        return false;
+    public void cancel(long ruleId) {
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(new RuleCancellationEvent(this, ruleId));
+        }
     }
 
     @Override

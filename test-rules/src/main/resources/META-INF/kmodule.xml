@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kmodule xmlns="http://www.drools.org/xsd/kmodule">
+
+    <kbase name="testa" packages="com.example.rules.testa">
+        <ksession name="test_a"/>
+    </kbase>
+
+    <kbase name="testb" packages="com.example.rules.testb">
+        <ksession name="test_b"/>
+    </kbase>
+
+    <kbase name="cancel" packages="com.example.rules.cancel">
+        <ksession name="cancel"/>
+    </kbase>
+
+    <kbase name="decision" packages="com.example.rules.decision">
+        <ksession name="decision"/>
+    </kbase>
+
+</kmodule>

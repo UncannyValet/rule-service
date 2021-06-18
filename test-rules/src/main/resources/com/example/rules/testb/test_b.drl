@@ -1,0 +1,39 @@
+package com.example.rules.testb;
+
+import com.example.rules.fact.TestRequestB;
+import com.example.rules.fact.Message;
+
+rule "Over 0"
+when
+    TestRequestB(value > 0, $value : value)
+then
+    insert(new Message("TB0: Total (" + $value + ") greater than 0"));
+end
+
+rule "Over 20"
+when
+    TestRequestB(value > 20, $value : value)
+then
+    insert(new Message("TB20: Total (" + $value + ") greater than 20"));
+end
+
+rule "Over 40"
+when
+    TestRequestB(value > 40, $value : value)
+then
+    insert(new Message("TB40: Total (" + $value + ") greater than 40"));
+end
+
+rule "Over 60"
+when
+    TestRequestB(value > 60, $value : value)
+then
+    insert(new Message("TB60: Total (" + $value + ") greater than 60"));
+end
+
+rule "Over 80"
+when
+    TestRequestB(value > 80, $value : value)
+then
+    insert(new Message("TB80: Total (" + $value + ") greater than 80"));
+end

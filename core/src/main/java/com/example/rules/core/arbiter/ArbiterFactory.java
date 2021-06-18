@@ -7,8 +7,6 @@ import com.example.rules.spi.arbiter.Arbiter;
 
 public interface ArbiterFactory {
 
-    Class<? extends RuleResult> getResultClass(RuleRequest request);
-
     Class<? extends RuleResult> getResultClass(Class<? extends RuleRequest> requestClass);
 
     <R extends RuleRequest, A extends Arbiter<R, ? extends RuleResult>> A getArbiter(RuleContext context);

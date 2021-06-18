@@ -67,4 +67,6 @@ public interface RuleContext {
      * Spawns Investigators in parallel to gather facts, accounting for dependencies if any exist
      */
     void investigate(RuleSession session);
+
+    boolean isStopped();
 }

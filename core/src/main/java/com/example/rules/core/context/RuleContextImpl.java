@@ -4,7 +4,7 @@ import com.example.rules.api.RuleException;
 import com.example.rules.api.RuleRequest;
 import com.example.rules.api.RuleResult;
 import com.example.rules.core.investigator.InvestigatorFactory;
-import com.example.rules.core.session.SessionFactory;
+import com.example.rules.spi.session.SessionFactory;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.RuleStats;
 import com.example.rules.spi.investigator.Investigator;
@@ -32,9 +32,9 @@ public class RuleContextImpl implements RuleContext {
 
     private final long id;
     private final RuleRequest request;
-    private final SessionFactory sessionFactory;
-    private final InvestigatorFactory investigatorFactory;
 
+    private SessionFactory sessionFactory;
+    private InvestigatorFactory investigatorFactory;
     private AsyncTaskExecutor executor;
 
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
@@ -42,15 +42,24 @@ public class RuleContextImpl implements RuleContext {
     private final RuleStats statistics = new RuleStatsImpl();
 
     private RuleResult result;
+    private boolean stopped;
 
-    public RuleContextImpl(long id, RuleRequest request, SessionFactory sessionFactory, InvestigatorFactory investigatorFactory) {
+    public RuleContextImpl(long id, RuleRequest request) {
         this.id = id;
         this.request = request;
-        this.sessionFactory = sessionFactory;
-        this.investigatorFactory = investigatorFactory;
     }
 
     @Autowired
+    public void setSessionFactory(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
+
+    @Autowired
+    public void setInvestigatorFactory(InvestigatorFactory investigatorFactory) {
+        this.investigatorFactory = investigatorFactory;
+    }
+
+    @Autowired(required = false)
     @Qualifier("investigatorPool")
     public void setExecutor(AsyncTaskExecutor executor) {
         this.executor = executor;
@@ -129,6 +138,11 @@ public class RuleContextImpl implements RuleContext {
         }
     }
 
+    @Override
+    public boolean isStopped() {
+        return stopped;
+    }
+
     private CompletableFuture<Investigator<?, ?>> schedule(Investigator<?, ?> investigator, RuleSession session) {
         return CompletableFuture.supplyAsync(() -> {
             investigator.gatherFacts(session);
@@ -139,6 +153,7 @@ public class RuleContextImpl implements RuleContext {
     @EventListener(RuleCancellationEvent.class)
     public void onCancellationEvent(RuleCancellationEvent event) {
         if (id == event.getSessionId()) {
+            stopped = true;
             synchronized (running) {
                 running.values().forEach(f -> f.cancel(true));
             }

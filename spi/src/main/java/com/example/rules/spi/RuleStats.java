@@ -13,7 +13,7 @@ public interface RuleStats {
      *
      * @return a Map of Rule IDs and their assertion count
      */
-    Map<String, Integer> getRuleStatistics();
+    Map<String, Integer> getRuleHistogram();
 
     /**
      * Returns a Map of fact classes and their count and duration

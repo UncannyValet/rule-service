@@ -2,7 +2,6 @@ package com.example.rules.core.investigator;
 
 import com.example.rules.api.RuleRequest;
 import com.example.rules.spi.RuleContext;
-import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.investigator.Investigator;
 import com.example.rules.spi.utils.ClassUtils;
 import org.atteo.classindex.ClassIndex;
@@ -24,7 +23,7 @@ public class InvestigatorFactoryImpl implements InvestigatorFactory, Application
     public InvestigatorFactoryImpl() {
         ClassIndex.getSubclasses(Investigator.class).forEach(c -> {
             if (ClassUtils.canInstantiate(c)) {
-                Class<? extends RuleRequest> requestClass = ClassUtils.getTypeArgument(c, Arbiter.class, 0);
+                Class<? extends RuleRequest> requestClass = ClassUtils.getTypeArgument(c, Investigator.class, 0);
                 investigatorMap.computeIfAbsent(requestClass, k -> new HashSet<>()).add(c);
             }
         });

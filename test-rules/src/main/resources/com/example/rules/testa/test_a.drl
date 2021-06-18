@@ -1,0 +1,78 @@
+package com.example.rules.testa;
+
+import java.util.List;
+import com.example.rules.fact.TestFact;
+
+global Integer threshold;
+global com.example.rules.fact.TestResult res;
+
+declare EvenFact
+    number: int
+    name: String
+end
+
+function boolean isEven(int value) {
+    return (value % 2) == 0;
+}
+
+rule "Under Threshold"
+when
+    TestFact(value < threshold, $value : value)
+then
+    res.add("Value " + $value + " under threshold " + threshold);
+end
+
+rule "Over Threshold"
+when
+    TestFact(value > threshold, $value : value)
+then
+    res.add("Value " + $value + " over threshold " + threshold);
+end
+
+rule "Equals Threshold"
+when
+    $items : List(size > 0) from accumulate($f : TestFact(value == threshold), collectList($f))
+    //accumulate($f : TestFact(value == threshold); $items : collectList($f); $items.size > 0)
+then
+    res.add("Items matching threshold: " + $items);
+end
+
+rule "No equals"
+when
+    not TestFact(value == threshold)
+then
+    res.add("No items matching threshold");
+end
+
+rule "One Under"
+when
+    exists TestFact(value < threshold)
+then
+    res.add("At least one fact under the threshold");
+end
+
+rule "Count Over"
+when
+    $count: Long(intValue > 0) from accumulate(TestFact(value > threshold), count(1))
+    //accumulate(TestFact(value > threshold); $count : count(1); $count > 0)
+then
+    res.add("" + $count + " facts over the threshold");
+end
+
+rule "Has Facts"
+when
+    exists TestFact()
+then
+    res.add("TA0: At least one fact");
+end
+
+rule "Even facts"
+when
+    TestFact( isEven(value), $val: value )
+then
+    insert(new EvenFact($val, "Value " + $val));
+end
+
+query "Even query"
+    EvenFact()
+end

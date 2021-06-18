@@ -1,0 +1,22 @@
+package com.example.rules.cancel;
+
+import com.example.rules.fact.CancelFact;
+
+rule "Cancel true"
+    @note(Executes until cancelled)
+    @think_before_using(Really, do)
+    @dangerous
+when
+    f: CancelFact(state)
+then
+    f.setState(false);
+    update(f);
+end
+
+rule "Cancel false"
+when
+    f: CancelFact(!state)
+then
+    f.setState(true);
+    update(f);
+end
