@@ -1,16 +1,17 @@
 package com.example.rules.core.drools;
 
 import com.example.rules.spi.session.RuleSession;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.logging.log4j.Logger;
+import org.kie.api.definition.rule.Rule;
 import org.kie.api.event.process.ProcessEventListener;
 import org.kie.api.event.rule.*;
 import org.kie.api.runtime.KieSession;
-import org.kie.api.runtime.rule.Agenda;
-import org.kie.api.runtime.rule.QueryResults;
+import org.kie.api.runtime.rule.*;
 
 import java.util.*;
-import java.util.stream.Stream;
+import java.util.stream.*;
 
 /**
  * Wrapper class for Drools sessions
@@ -32,7 +33,7 @@ public class DroolsSession implements RuleSession {
     }
 
     @Override
-    public <T> Stream<T> getFactStream(Class<T> factClass) {
+    public <T> Stream<T> getFacts(Class<T> factClass) {
         return session.getObjects().stream()
                 .filter(factClass::isInstance)
                 .map(factClass::cast);
@@ -58,21 +59,28 @@ public class DroolsSession implements RuleSession {
 
     @Override
     public int runRules() {
-//        RuleNameFilter filter = new RuleNameFilter();
-//        int count = filter.isEmpty() ? session.fireAllRules() : session.fireAllRules(filter);
-        int count = session.fireAllRules();
+        RuleNameFilter filter = new RuleNameFilter();
+        int count = filter.isEmpty() ? session.fireAllRules() : session.fireAllRules(filter);
         if (log != null) {
             ruleCounts.forEach((name, value) -> log.info("- Rule '" + name + "' asserted " + value.intValue() + " time(s)"));
         }
         return count;
     }
 
-    public Agenda getAgenda() {
-        return session.getAgenda();
-    }
-
-    public QueryResults getQueryResults(String query, Object... arguments) {
-        return session.getQueryResults(query, arguments);
+    @Override
+    public Stream<Object[]> query(String queryId, String[] objectNames, Object... arguments) {
+        QueryResults results = session.getQueryResults(queryId, arguments);
+        if (results.size() > 0) {
+            return StreamSupport.stream(results.spliterator(), false)
+                    .map(r -> {
+                        Object[] result = {objectNames.length};
+                        for (int i = 0; i < objectNames.length; ++i) {
+                            result[i] = r.get(objectNames[i]);
+                        }
+                        return result;
+                    });
+        }
+        return Stream.empty();
     }
 
     @Override
@@ -93,9 +101,9 @@ public class DroolsSession implements RuleSession {
             return Collections.emptyMap();
         }
 
-        Map<String, Integer> retval = new HashMap<>(ruleCounts.size());
-        ruleCounts.forEach((id, cnt) -> retval.put(id, cnt.intValue()));
-        return retval;
+        Map<String, Integer> countMap = new HashMap<>(ruleCounts.size());
+        ruleCounts.forEach((id, cnt) -> countMap.put(id, cnt.intValue()));
+        return countMap;
     }
 
     @Override
@@ -129,49 +137,48 @@ public class DroolsSession implements RuleSession {
         }
     }
 
-//    private static class RuleNameFilter implements AgendaFilter {
-//
-//        private final Set<String> enabledRules;
-//        private final Set<String> disabledRules;
-//
-//        RuleNameFilter() {
-//            Configuration config = ConfigurationFactory.getInstance().getConfiguration().subset("rules.control");
-//            String[] s = config.getStringArray("enabled.rules");
-//            if (s.length > 0) {
-//                enabledRules = Arrays.stream(s)
-//                        .filter(StringUtils::isNotEmpty)
-//                        .map(String::trim)
-//                        .map(String::toLowerCase)
-//                        .collect(Collectors.toCollection(HashSet::new));
-//            } else {
-//                enabledRules = Collections.emptySet();
-//            }
-//            s = config.getStringArray("disabled.rules");
-//            if (s.length > 0) {
-//                disabledRules = Arrays.stream(s)
-//                        .filter(StringUtils::isNotEmpty)
-//                        .map(String::trim)
-//                        .map(String::toLowerCase)
-//                        .collect(Collectors.toCollection(HashSet::new));
-//            } else {
-//                disabledRules = Collections.emptySet();
-//            }
-//        }
-//
-//        boolean isEmpty() {
-//            return enabledRules.isEmpty() && disabledRules.isEmpty();
-//        }
-//
-//        @Override
-//        public boolean accept(Match match) {
-//            Rule rule = match.getRule();
-//            String ruleName = rule.getName().toLowerCase();
-//            Map<String, Object> metadata = rule.getMetaData();
-//            String ruleId = metadata.containsKey("id") ? ((String)metadata.get("id")).toLowerCase() : "";
-//            if (!enabledRules.isEmpty()) {
-//                return enabledRules.contains(ruleName) || enabledRules.contains(ruleId);
-//            }
-//            return !(disabledRules.contains(ruleName) || disabledRules.contains(ruleId));
-//        }
-//    }
+    private static class RuleNameFilter implements AgendaFilter {
+
+        private final Set<String> enabledRules;
+        private final Set<String> disabledRules;
+
+        RuleNameFilter() {
+            String s = System.getProperty("drools.rules.enabled", "");
+            if (StringUtils.isNotEmpty(s)) {
+                enabledRules = Arrays.stream(s.split(","))
+                        .filter(StringUtils::isNotEmpty)
+                        .map(String::trim)
+                        .map(String::toLowerCase)
+                        .collect(Collectors.toCollection(HashSet::new));
+            } else {
+                enabledRules = Collections.emptySet();
+            }
+            s = System.getProperty("drools.rules.disabled", "");
+            if (StringUtils.isNotEmpty(s)) {
+                disabledRules = Arrays.stream(s.split(","))
+                        .filter(StringUtils::isNotEmpty)
+                        .map(String::trim)
+                        .map(String::toLowerCase)
+                        .collect(Collectors.toCollection(HashSet::new));
+            } else {
+                disabledRules = Collections.emptySet();
+            }
+        }
+
+        boolean isEmpty() {
+            return enabledRules.isEmpty() && disabledRules.isEmpty();
+        }
+
+        @Override
+        public boolean accept(Match match) {
+            Rule rule = match.getRule();
+            String ruleName = rule.getName().toLowerCase();
+            Map<String, Object> metadata = rule.getMetaData();
+            String ruleId = metadata.containsKey("id") ? ((String)metadata.get("id")).toLowerCase() : "";
+            if (!enabledRules.isEmpty()) {
+                return enabledRules.contains(ruleName) || enabledRules.contains(ruleId);
+            }
+            return !(disabledRules.contains(ruleName) || disabledRules.contains(ruleId));
+        }
+    }
 }

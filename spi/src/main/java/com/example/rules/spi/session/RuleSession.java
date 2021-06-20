@@ -2,10 +2,8 @@ package com.example.rules.spi.session;
 
 import org.apache.logging.log4j.Logger;
 
-import java.util.Collection;
 import java.util.EventListener;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -21,29 +19,21 @@ public interface RuleSession extends AutoCloseable {
     <F> void insert(F fact);
 
     /**
-     * Retrieves a Collection of Facts present in this session
-     *
-     * @return a Collection of Facts
-     */
-    default Collection<Object> getFacts() {
-        return getFacts(Object.class);
-    }
-
-    /**
-     * Retrieves a Collection of Facts of the given class present in this session
-     *
-     * @return a Collection of Facts of the given class
-     */
-    default <T> Collection<T> getFacts(Class<T> factClass) {
-        return getFactStream(factClass).collect(Collectors.toList());
-    }
-
-    /**
      * Retrieves a Stream of Facts of the given class present in this session
      *
      * @return a Collection of Facts of the given class
      */
-    <T> Stream<T> getFactStream(Class<T> factClass);
+    <T> Stream<T> getFacts(Class<T> factClass);
+
+    /**
+     * Executes a query against the Facts in the session
+     *
+     * @param queryId     the ID of the query to execute
+     * @param objectNames the names of the objects to extract from the results row
+     * @param arguments   arguments passed to the query
+     * @return a Stream containing the results of the query in arrays, ordered as objectNames
+     */
+    Stream<Object[]> query(String queryId, String[] objectNames, Object... arguments);
 
     /**
      * Sets the value of a global variable in the session
@@ -86,7 +76,7 @@ public interface RuleSession extends AutoCloseable {
      * @return the count of facts attached to this session
      */
     default long getFactCount() {
-        return getFactStream(Object.class).count();
+        return getFacts(Object.class).count();
     }
 
     /**

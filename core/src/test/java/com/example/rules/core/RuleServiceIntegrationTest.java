@@ -2,6 +2,7 @@ package com.example.rules.core;
 
 import com.example.rules.api.RuleRequest;
 import com.example.rules.api.RuleResult;
+import com.example.rules.api.RuleService;
 import com.example.rules.core.arbiter.ArbiterFactory;
 import com.example.rules.core.context.RuleContextFactory;
 import com.example.rules.core.processor.TestArbiter;
@@ -38,5 +39,11 @@ public class RuleServiceIntegrationTest {
         Arbiter<RuleRequest, ? extends RuleResult> arbiter = context.getBean(ArbiterFactory.class).getArbiter(ruleContext);
         assertNotNull(arbiter);
         assertTrue(TestArbiter.class.isInstance(arbiter));
+    }
+
+    @Test
+    public void runRules() {
+        TestResult result = context.getBean(RuleService.class).run(new TestRequest(5));
+        assertNotNull(result);
     }
 }

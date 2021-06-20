@@ -5,8 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.*;
 
 public class CompoundSession implements RuleSession {
 
@@ -18,21 +17,14 @@ public class CompoundSession implements RuleSession {
         this.sessions = sessions;
     }
 
-    /**
-     * Returns the underlying sessions contained in this wrapper
-     */
-    public Collection<RuleSession> getSessions() {
-        return Collections.unmodifiableCollection(sessions);
-    }
-
     @Override
     public <F> void insert(F fact) {
         sessions.forEach(s -> s.insert(fact));
     }
 
     @Override
-    public <T> Stream<T> getFactStream(Class<T> factClass) {
-        return sessions.stream().flatMap(session -> session.getFactStream(factClass));
+    public <T> Stream<T> getFacts(Class<T> factClass) {
+        return sessions.stream().flatMap(session -> session.getFacts(factClass));
     }
 
     @Override
@@ -55,6 +47,11 @@ public class CompoundSession implements RuleSession {
         return sessions.stream()
                 .mapToInt(RuleSession::runRules)
                 .sum();
+    }
+
+    @Override
+    public Stream<Object[]> query(String queryId, String[] objectNames, Object... arguments) {
+        return sessions.stream().flatMap(s -> s.query(queryId, objectNames, arguments));
     }
 
     @Override

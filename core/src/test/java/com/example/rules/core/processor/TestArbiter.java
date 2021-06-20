@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
-@RuleSet("test")
+@RuleSet("test_a")
 @Component
 @Scope(SCOPE_PROTOTYPE)
 public class TestArbiter extends AbstractArbiter<TestRequest, TestResult> {
@@ -32,7 +32,7 @@ public class TestArbiter extends AbstractArbiter<TestRequest, TestResult> {
 
     @Override
     protected void beforeRules(RuleSession session) {
-        super.beforeRules(session);
+        session.setGlobal("res", getResult());
     }
 
     @Override

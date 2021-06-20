@@ -1,5 +1,6 @@
 package com.example.rules.core.processor;
 
+import com.example.rules.fact.TestFact;
 import com.example.rules.fact.TestRequest;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.investigator.AbstractInvestigator;
@@ -10,7 +11,7 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 
 @Component
 @Scope(SCOPE_PROTOTYPE)
-public class TestInvestigator extends AbstractInvestigator<TestRequest, String> {
+public class TestInvestigator extends AbstractInvestigator<TestRequest, TestFact> {
 
     public TestInvestigator(RuleContext context) {
         super(context);
@@ -18,7 +19,9 @@ public class TestInvestigator extends AbstractInvestigator<TestRequest, String> 
 
     @Override
     protected void doGather() {
-        insert("Fact");
+        for (int i = 0; i < 10; ++i) {
+            insert(new TestFact(i));
+        }
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.example.rules.spi.arbiter;
 
 import com.example.rules.spi.RuleContext;
+import com.example.rules.spi.RuleStats;
 import com.example.rules.spi.processor.TestArbiter;
 import com.example.rules.spi.processor.TestResult;
 import com.example.rules.spi.session.RuleSession;
@@ -22,6 +23,9 @@ public class ArbiterTest {
     private RuleContext context;
 
     @Mock
+    private RuleStats stats;
+
+    @Mock
     private RuleSession session;
 
     private TestArbiter arbiter;
@@ -34,6 +38,7 @@ public class ArbiterTest {
     @Test
     public void testArbitration() {
         when(context.newSession(any())).thenReturn(session);
+        when(context.getStats()).thenReturn(stats);
         when(session.getRuleCount()).thenReturn(1);
         TestResult result = arbiter.processRules();
         assertNotNull(result);
