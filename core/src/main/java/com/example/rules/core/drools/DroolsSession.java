@@ -3,12 +3,12 @@ package com.example.rules.core.drools;
 import com.example.rules.spi.session.RuleSession;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.apache.logging.log4j.Logger;
 import org.kie.api.definition.rule.Rule;
 import org.kie.api.event.process.ProcessEventListener;
 import org.kie.api.event.rule.*;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.*;
+import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.stream.*;

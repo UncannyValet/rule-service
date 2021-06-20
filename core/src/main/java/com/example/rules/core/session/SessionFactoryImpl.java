@@ -7,14 +7,14 @@ import com.example.rules.core.drools.RuleUpdateWorker;
 import com.example.rules.spi.session.RuleContainer;
 import com.example.rules.spi.session.RuleSession;
 import com.example.rules.spi.session.SessionFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieScanner;
 import org.kie.api.builder.ReleaseId;
 import org.kie.api.event.kiescanner.KieScannerEventListener;
 import org.kie.api.event.kiescanner.KieScannerStatusChangeEvent;
 import org.kie.api.event.kiescanner.KieScannerUpdateResultsEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.TaskScheduler;
@@ -32,7 +32,7 @@ import static com.example.rules.api.ErrorNumbers.DUPLICATE_CONTAINER;
 @Component
 public class SessionFactoryImpl implements SessionFactory {
 
-    private static final Logger LOG = LogManager.getLogger(SessionFactoryImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SessionFactoryImpl.class);
 
     private final KieServices kieServices;
     private final Map<RuleContainer, Set<String>> containers = new ConcurrentHashMap<>();

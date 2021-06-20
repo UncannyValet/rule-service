@@ -1,15 +1,15 @@
 package com.example.rules.core.session;
 
 import com.example.rules.spi.session.RuleSession;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.*;
 
 public class CompoundSession implements RuleSession {
 
-    private static final Logger LOG = LogManager.getLogger(CompoundSession.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CompoundSession.class);
 
     private final Collection<? extends RuleSession> sessions;
 

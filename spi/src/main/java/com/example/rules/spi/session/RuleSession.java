@@ -1,6 +1,6 @@
 package com.example.rules.spi.session;
 
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.util.EventListener;
 import java.util.Map;

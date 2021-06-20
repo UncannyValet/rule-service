@@ -3,12 +3,10 @@ package com.example.rules.api;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterOutputStream;
@@ -17,7 +15,7 @@ import static com.example.rules.api.ErrorNumbers.*;
 
 public class RuleSerializer {
 
-    private static final Logger LOG = LogManager.getLogger(RuleSerializer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RuleSerializer.class);
     private static final XStream xstream;
 
     static {

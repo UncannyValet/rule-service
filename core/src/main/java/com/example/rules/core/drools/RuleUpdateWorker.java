@@ -1,12 +1,12 @@
 package com.example.rules.core.drools;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.kie.api.builder.KieScanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RuleUpdateWorker implements Runnable {
 
-    private static final Logger LOG = LogManager.getLogger(RuleUpdateWorker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RuleUpdateWorker.class);
 
     private final KieScanner scanner;
 

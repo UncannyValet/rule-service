@@ -6,9 +6,9 @@ import com.example.rules.api.RuleResult;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.utils.ClassUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.atteo.classindex.ClassIndex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,7 @@ import static com.example.rules.api.ErrorNumbers.ARBITER_NOT_REGISTERED;
 @Component
 public class ArbiterFactoryImpl implements ArbiterFactory, ApplicationContextAware {
 
-    private static final Logger LOG = LogManager.getLogger(ArbiterFactoryImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ArbiterFactoryImpl.class);
 
     private ApplicationContext applicationContext;
 

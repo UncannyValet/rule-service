@@ -9,8 +9,8 @@ import com.example.rules.spi.session.RuleCancellationEvent;
 import com.example.rules.spi.session.RuleSession;
 import com.example.rules.spi.utils.ClassUtils;
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 
 import java.util.Map;
@@ -32,7 +32,7 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
     private static final Map<Class<?>, Class<?>> resultClasses = new ConcurrentHashMap<>();
     private static final Map<Class<?>, String[]> ruleSetMap = new ConcurrentHashMap<>();
 
-    protected final Logger LOG = LogManager.getLogger(getClass());
+    protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
     private final RuleContext context;
     private final String[] ruleSets;

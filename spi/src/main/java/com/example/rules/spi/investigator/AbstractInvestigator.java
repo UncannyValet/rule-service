@@ -6,8 +6,8 @@ import com.example.rules.spi.RuleStats;
 import com.example.rules.spi.session.RuleSession;
 import com.example.rules.spi.utils.ClassUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractInvestigator<R extends RuleRequest, F> implements Investigator<R, F> {
 
     @SuppressWarnings("squid:S00116")
-    protected final Logger LOG = LogManager.getLogger(getClass());
+    protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
     private static final Map<Class<?>, Set<Class<? extends Investigator<?, ?>>>> dependencyMap = new ConcurrentHashMap<>();
     private static final Map<Class<?>, Class<?>> factClasses = new ConcurrentHashMap<>();

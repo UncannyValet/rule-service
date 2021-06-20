@@ -17,15 +17,10 @@
             <groupId>com.thoughtworks.xstream</groupId>
             <artifactId>xstream</artifactId>
         </dependency>
-        <!-- Components -->
-        <!--        <dependency>-->
-        <!--            <groupId>dax-components</groupId>-->
-        <!--            <artifactId>dax-components-services</artifactId>-->
-        <!--        </dependency>-->
 
-        <!--        <dependency>-->
-        <!--            <groupId>dax-components</groupId>-->
-        <!--            <artifactId>dax-components-record</artifactId>-->
-        <!--        </dependency>-->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
     </dependencies>
 </project>
