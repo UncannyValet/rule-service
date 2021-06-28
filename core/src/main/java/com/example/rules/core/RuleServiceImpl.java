@@ -48,8 +48,8 @@ public class RuleServiceImpl implements RuleService {
     @Override
     public <T extends RuleResult> T run(RuleRequest request) {
         RuleContext context = ruleContextFactory.newContext(request);
-        Arbiter<RuleRequest, ? extends RuleResult> arbiter = arbiterFactory.getArbiter(context);
-        return (T)arbiter.processRules();
+        Arbiter<RuleRequest, T> arbiter = arbiterFactory.getArbiter(context);
+        return arbiter.processRules();
     }
 
     @Override

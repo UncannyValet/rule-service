@@ -4,10 +4,10 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 @Entity
-public class RuleRun {
+public class RuleLog {
 
     @Id
-    private long id;
+    private Long id;
 
     private String requestClass;
 

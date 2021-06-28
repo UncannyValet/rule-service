@@ -1,15 +1,11 @@
 package com.example.rules.core.context;
 
-import com.example.rules.api.RuleException;
-import com.example.rules.api.RuleRequest;
-import com.example.rules.api.RuleResult;
+import com.example.rules.api.*;
 import com.example.rules.core.investigator.InvestigatorFactory;
-import com.example.rules.spi.session.SessionFactory;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.RuleStats;
 import com.example.rules.spi.investigator.Investigator;
-import com.example.rules.spi.session.RuleCancellationEvent;
-import com.example.rules.spi.session.RuleSession;
+import com.example.rules.spi.session.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
@@ -144,10 +140,17 @@ public class RuleContextImpl implements RuleContext {
     }
 
     private CompletableFuture<Investigator<?, ?>> schedule(Investigator<?, ?> investigator, RuleSession session) {
-        return CompletableFuture.supplyAsync(() -> {
-            investigator.gatherFacts(session);
-            return investigator;
-        }, executor);
+        if (executor != null) {
+            return CompletableFuture.supplyAsync(() -> {
+                investigator.gatherFacts(session);
+                return investigator;
+            }, executor);
+        } else {
+            return CompletableFuture.completedFuture(investigator).thenApply(i -> {
+                i.gatherFacts(session);
+                return i;
+            });
+        }
     }
 
     @EventListener(RuleCancellationEvent.class)
