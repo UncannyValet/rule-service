@@ -12,9 +12,17 @@ public interface RuleService {
      * Schedules an asynchronous rule run against a given request
      *
      * @param request the RuleRequest
+     * @return an ID used to track the run
+     */
+    long schedule(RuleRequest request);
+
+    /**
+     * Schedules an asynchronous rule run against a given request
+     *
+     * @param request the RuleRequest
      * @return a Future used to track the run
      */
-    Future<RuleResult> schedule(RuleRequest request);
+    Future<RuleResult> submit(RuleRequest request);
 
     /**
      * Executes a synchronous rule run against a given request
