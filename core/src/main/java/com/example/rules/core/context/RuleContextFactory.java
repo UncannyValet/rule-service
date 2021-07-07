@@ -5,5 +5,5 @@ import com.example.rules.spi.RuleContext;
 
 public interface RuleContextFactory {
 
-    RuleContext newContext(RuleRequest request);
+    RuleContext newContext(RuleRequest request, long runId);
 }

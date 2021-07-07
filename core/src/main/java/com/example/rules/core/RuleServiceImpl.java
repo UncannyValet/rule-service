@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 @Service
 public class RuleServiceImpl implements RuleService {
@@ -51,62 +52,82 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     public Future<RuleResult> submit(RuleRequest request) {
-        RuleLog logEntry = createLog(request);
-        return arbiterExecutor.submit(() -> run(request, logEntry.getId()));
+        long runId = createLog(request);
+        return arbiterExecutor.submit(() -> run(request, runId));
     }
 
     @Override
     public long schedule(RuleRequest request) {
-        RuleLog logEntry = createLog(request);
-        arbiterExecutor.submit(() -> run(request, logEntry.getId()));
-        return logEntry.getId();
+        long runId = createLog(request);
+        arbiterExecutor.submit(() -> run(request, runId));
+        return runId;
     }
 
     @Override
     public <T extends RuleResult> T run(RuleRequest request) {
-        RuleLog logEntry = createLog(request);
-        return run(request, logEntry.getId());
+        long runId = createLog(request);
+        return run(request, runId);
     }
 
     private <T extends RuleResult> T run(RuleRequest request, long runId) {
-        logRepository.findById(runId).ifPresent(l -> {
-            l.setUpdateTime(LocalDateTime.now());
-            l.setState("RUNNING");
-            logRepository.save(l);
-        });
+        logRunning(runId);
 
         try {
-            RuleContext context = ruleContextFactory.newContext(request);
+            RuleContext context = ruleContextFactory.newContext(request, runId);
             Arbiter<RuleRequest, T> arbiter = arbiterFactory.getArbiter(context);
             T result = arbiter.processRules();
-
-            logRepository.findById(runId).ifPresent(l -> {
-                l.setUpdateTime(LocalDateTime.now());
-                l.setState("SUCCESS");
-                l.setResultClass(result.getClass().getName());
-                l.setResultDescription(result.getDescription());
-                logRepository.save(l);
-            });
-
+            logSuccess(runId, result);
             return result;
         } catch (Exception e) {
-            logRepository.findById(runId).ifPresent(l -> {
-                l.setUpdateTime(LocalDateTime.now());
-                l.setState("FAILURE");
-                logRepository.save(l);
-            });
+            logFailure(runId);
             return null;
         }
     }
 
-    private RuleLog createLog(RuleRequest request) {
-        RuleLog logEntry = new RuleLog();
-        logEntry.setState("CREATED");
-        logEntry.setRequestClass(request.getClass().getName());
-        logEntry.setRequestHash(request.hashCode());
-        logEntry.setRequestData(RuleSerializer.serialize(request));
-        logEntry.setRequestDescription(request.getDescription());
-        return logRepository.save(logEntry);
+    private long createLog(RuleRequest request) {
+        if (logRepository != null) {
+            RuleLog logEntry = new RuleLog();
+            logEntry.setState("CREATED");
+            logEntry.setRequestClass(request.getClass().getName());
+            logEntry.setRequestHash(request.hashCode());
+            logEntry.setRequestData(RuleSerializer.serialize(request));
+            logEntry.setRequestDescription(request.getDescription());
+            return logRepository.save(logEntry).getId();
+        } else {
+            return 0;
+        }
+    }
+
+    private void logRunning(long runId) {
+        if (logRepository != null) {
+            logRepository.findById(runId).ifPresent(log -> {
+                log.setUpdateTime(LocalDateTime.now());
+                log.setState("RUNNING");
+                logRepository.save(log);
+            });
+        }
+    }
+
+    private void logSuccess(long runId, RuleResult result) {
+        if (logRepository != null) {
+            logRepository.findById(runId).ifPresent(log -> {
+                log.setUpdateTime(LocalDateTime.now());
+                log.setState("SUCCESS");
+                log.setResultClass(result.getClass().getName());
+                log.setResultDescription(result.getDescription());
+                logRepository.save(log);
+            });
+        }
+    }
+
+    private void logFailure(long runId) {
+        if (logRepository != null) {
+            logRepository.findById(runId).ifPresent(log -> {
+                log.setUpdateTime(LocalDateTime.now());
+                log.setState("FAILURE");
+                logRepository.save(log);
+            });
+        }
     }
 
     @Override
@@ -121,7 +142,9 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     public Collection<String> getKnownRequests() {
-        return null;
+        return arbiterFactory.getKnownRequests().stream()
+                .map(Class::getName)
+                .collect(Collectors.toList());
     }
 
     @Override

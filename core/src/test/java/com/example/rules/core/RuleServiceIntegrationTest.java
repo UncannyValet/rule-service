@@ -32,7 +32,7 @@ public class RuleServiceIntegrationTest {
     @Test
     public void findArbiter() {
         RuleContextFactory factory = context.getBean(RuleContextFactory.class);
-        RuleContext ruleContext = factory.newContext(new TestRequest(5));
+        RuleContext ruleContext = factory.newContext(new TestRequest(5), 1);
         Arbiter<RuleRequest, ? extends RuleResult> arbiter = context.getBean(ArbiterFactory.class).getArbiter(ruleContext);
         assertNotNull(arbiter);
         assertTrue(TestArbiter.class.isInstance(arbiter));

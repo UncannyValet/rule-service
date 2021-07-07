@@ -1,8 +1,6 @@
 package com.example.rules.core.arbiter;
 
-import com.example.rules.api.RuleException;
-import com.example.rules.api.RuleRequest;
-import com.example.rules.api.RuleResult;
+import com.example.rules.api.*;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.utils.ClassUtils;
@@ -13,8 +11,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.example.rules.api.ErrorNumbers.ARBITER_NOT_REGISTERED;
 
@@ -59,6 +56,11 @@ public class ArbiterFactoryImpl implements ArbiterFactory, ApplicationContextAwa
         } else {
             throw new RuleException(ARBITER_NOT_REGISTERED);
         }
+    }
+
+    @Override
+    public Collection<Class<? extends RuleRequest>> getKnownRequests() {
+        return arbiterMap.keySet();
     }
 
     @Override

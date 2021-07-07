@@ -11,13 +11,11 @@ import java.util.concurrent.atomic.AtomicLong;
 @Component
 public class RuleContextFactoryImpl implements RuleContextFactory, ApplicationContextAware {
 
-    private final AtomicLong idGenerator = new AtomicLong();
-
     private ApplicationContext applicationContext;
 
     @Override
-    public RuleContext newContext(RuleRequest request) {
-        return applicationContext.getBean(RuleContext.class, idGenerator.getAndIncrement(), request);
+    public RuleContext newContext(RuleRequest request, long runId) {
+        return applicationContext.getBean(RuleContext.class, runId, request);
     }
 
     @Override
