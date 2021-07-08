@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +25,7 @@ public class RuleServiceImpl implements RuleService {
 
     private final ArbiterFactory arbiterFactory;
     private final RuleContextFactory ruleContextFactory;
+    private final AtomicLong idGenerator = new AtomicLong(1);
 
     private RuleLogRepository logRepository;
     private ApplicationEventPublisher applicationEventPublisher;
@@ -94,7 +96,7 @@ public class RuleServiceImpl implements RuleService {
             logEntry.setRequestDescription(request.getDescription());
             return logRepository.save(logEntry).getId();
         } else {
-            return 0;
+            return idGenerator.getAndIncrement();
         }
     }
 

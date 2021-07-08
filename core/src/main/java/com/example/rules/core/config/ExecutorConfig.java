@@ -10,8 +10,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-//@EnableJpaRepositories("com.example.rules.core.repository")
-//@EnableTransactionManagement
+@EnableJpaRepositories("com.example.rules.core.repository")
+@EnableTransactionManagement
 public class ExecutorConfig {
 
     @Bean("arbiterPool")
