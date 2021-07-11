@@ -1,4 +1,4 @@
-package com.example.rules.core.model;
+package com.example.rules.core.domain;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;

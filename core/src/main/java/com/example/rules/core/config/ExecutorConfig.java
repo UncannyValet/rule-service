@@ -1,24 +1,27 @@
 package com.example.rules.core.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-@EnableJpaRepositories("com.example.rules.core.repository")
-@EnableTransactionManagement
 public class ExecutorConfig {
+
+    @Value("${executor.arbiter.size.core:4}")
+    private int arbiterPoolSize;
+
+    @Value("${executor.investigator.size.core:10}")
+    private int investigatorPoolSize;
 
     @Bean("arbiterPool")
     public AsyncTaskExecutor arbiterExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(10);
+        executor.setCorePoolSize(arbiterPoolSize);
+        executor.setMaxPoolSize(arbiterPoolSize);
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix("Arbiter");
         executor.setWaitForTasksToCompleteOnShutdown(false);
@@ -28,9 +31,9 @@ public class ExecutorConfig {
     @Bean("investigatorPool")
     public AsyncTaskExecutor investigatorExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10);
-        executor.setMaxPoolSize(20);
-        executor.setQueueCapacity(200);
+        executor.setCorePoolSize(investigatorPoolSize);
+        executor.setMaxPoolSize(investigatorPoolSize);
+        executor.setQueueCapacity(arbiterPoolSize * 10);
         executor.setThreadNamePrefix("Investigator");
         executor.setWaitForTasksToCompleteOnShutdown(false);
         return executor;

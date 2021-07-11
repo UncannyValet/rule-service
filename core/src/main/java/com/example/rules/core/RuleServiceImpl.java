@@ -3,8 +3,9 @@ package com.example.rules.core;
 import com.example.rules.api.*;
 import com.example.rules.core.arbiter.ArbiterFactory;
 import com.example.rules.core.context.RuleContextFactory;
-import com.example.rules.core.model.RuleLog;
+import com.example.rules.core.domain.RuleLog;
 import com.example.rules.core.repository.RuleLogRepository;
+import com.example.rules.spi.store.ResultStore;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.session.RuleCancellationEvent;
@@ -25,15 +26,17 @@ public class RuleServiceImpl implements RuleService {
 
     private final ArbiterFactory arbiterFactory;
     private final RuleContextFactory ruleContextFactory;
+    private final ApplicationEventPublisher eventPublisher;
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     private RuleLogRepository logRepository;
-    private ApplicationEventPublisher applicationEventPublisher;
+    private ResultStore resultStore;
     private AsyncTaskExecutor arbiterExecutor;
 
-    public RuleServiceImpl(ArbiterFactory arbiterFactory, RuleContextFactory ruleContextFactory) {
+    public RuleServiceImpl(ArbiterFactory arbiterFactory, RuleContextFactory ruleContextFactory, ApplicationEventPublisher eventPublisher) {
         this.arbiterFactory = arbiterFactory;
         this.ruleContextFactory = ruleContextFactory;
+        this.eventPublisher = eventPublisher;
     }
 
     @Autowired(required = false)
@@ -41,9 +44,9 @@ public class RuleServiceImpl implements RuleService {
         this.logRepository = logRepository;
     }
 
-    @Autowired
-    public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
-        this.applicationEventPublisher = applicationEventPublisher;
+    @Autowired(required = false)
+    public void setResultStore(ResultStore resultStore) {
+        this.resultStore = resultStore;
     }
 
     @Autowired
@@ -54,39 +57,39 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     public Future<RuleResult> submit(RuleRequest request) {
-        long runId = createLog(request);
+        long runId = onStart(request);
         return arbiterExecutor.submit(() -> run(request, runId));
     }
 
     @Override
     public long schedule(RuleRequest request) {
-        long runId = createLog(request);
+        long runId = onStart(request);
         arbiterExecutor.submit(() -> run(request, runId));
         return runId;
     }
 
     @Override
     public <T extends RuleResult> T run(RuleRequest request) {
-        long runId = createLog(request);
+        long runId = onStart(request);
         return run(request, runId);
     }
 
     private <T extends RuleResult> T run(RuleRequest request, long runId) {
-        logRunning(runId);
+        onRunning(runId);
 
         try {
             RuleContext context = ruleContextFactory.newContext(request, runId);
             Arbiter<RuleRequest, T> arbiter = arbiterFactory.getArbiter(context);
             T result = arbiter.processRules();
-            logSuccess(runId, result);
+            onSuccess(runId, result);
             return result;
         } catch (Exception e) {
-            logFailure(runId);
+            onFailure(runId);
             return null;
         }
     }
 
-    private long createLog(RuleRequest request) {
+    private long onStart(RuleRequest request) {
         if (logRepository != null) {
             RuleLog logEntry = new RuleLog();
             logEntry.setState("CREATED");
@@ -100,7 +103,7 @@ public class RuleServiceImpl implements RuleService {
         }
     }
 
-    private void logRunning(long runId) {
+    private void onRunning(long runId) {
         if (logRepository != null) {
             logRepository.findById(runId).ifPresent(log -> {
                 log.setUpdateTime(LocalDateTime.now());
@@ -110,7 +113,7 @@ public class RuleServiceImpl implements RuleService {
         }
     }
 
-    private void logSuccess(long runId, RuleResult result) {
+    private void onSuccess(long runId, RuleResult result) {
         if (logRepository != null) {
             logRepository.findById(runId).ifPresent(log -> {
                 log.setUpdateTime(LocalDateTime.now());
@@ -120,9 +123,12 @@ public class RuleServiceImpl implements RuleService {
                 logRepository.save(log);
             });
         }
+        if (resultStore != null) {
+            resultStore.upload(runId, result);
+        }
     }
 
-    private void logFailure(long runId) {
+    private void onFailure(long runId) {
         if (logRepository != null) {
             logRepository.findById(runId).ifPresent(log -> {
                 log.setUpdateTime(LocalDateTime.now());
@@ -134,7 +140,11 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     public <T extends RuleResult> T getResult(long ruleId) {
-        return null;
+        if (resultStore != null) {
+            return resultStore.download(ruleId);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -161,8 +171,8 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     public void cancel(long ruleId) {
-        if (applicationEventPublisher != null) {
-            applicationEventPublisher.publishEvent(new RuleCancellationEvent(this, ruleId));
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new RuleCancellationEvent(this, ruleId));
         }
     }
 
