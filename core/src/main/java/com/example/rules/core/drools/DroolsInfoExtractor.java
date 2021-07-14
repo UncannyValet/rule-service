@@ -46,8 +46,7 @@ public class DroolsInfoExtractor implements Function<KieContainer, Stream<RuleIn
                             .flatMap(pkg -> {
                                 String pkgName = pkg.getName();
                                 return Stream.of(MAPPERS)
-                                        .map(mapper -> mapper.apply(pkg))
-                                        .flatMap(s -> s)
+                                        .flatMap(mapper -> mapper.apply(pkg))
                                         .peek(i -> {
                                             i.setPkg(pkgName);
                                             i.setSource(source);
@@ -105,7 +104,7 @@ public class DroolsInfoExtractor implements Function<KieContainer, Stream<RuleIn
             super(RuleInfo.Type.GLOBAL,
                     KiePackage::getGlobalVariables,
                     Global::getName,
-                    f -> Stream.of(f).collect(Collectors.toMap(i -> "Type", i -> i.getType())));
+                    f -> Stream.of(f).collect(Collectors.toMap(i -> "Type", Global::getType)));
         }
     }
 

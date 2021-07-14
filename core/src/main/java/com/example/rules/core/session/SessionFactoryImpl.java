@@ -1,7 +1,6 @@
 package com.example.rules.core.session;
 
-import com.example.rules.api.RuleException;
-import com.example.rules.api.RuleRequest;
+import com.example.rules.api.*;
 import com.example.rules.core.drools.DroolsContainer;
 import com.example.rules.core.drools.RuleUpdateWorker;
 import com.example.rules.spi.session.RuleContainer;
@@ -26,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.example.rules.api.ErrorNumbers.DUPLICATE_CONTAINER;
 
@@ -187,6 +187,17 @@ public class SessionFactoryImpl implements SessionFactory {
         Set<String> sessionIds = new HashSet<>(Arrays.asList(ruleSets));
         sessionIds.addAll(getRegisteredSessions(request.getClass()));
         return getSession(sessionIds);
+    }
+
+    @Override
+    public Stream<RuleInfo> getRuleInfo() {
+        return Stream.concat(Stream.of(defaultContainer), containers.keySet().stream())
+                .flatMap(RuleContainer::getRuleInfo);
+    }
+
+    @Override
+    public Stream<RuleInfo> getRuleInfo(RuleRequest request) {
+        return null;
     }
 
     public RuleSession getSession(Collection<String> sessionIds) {

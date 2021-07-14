@@ -5,10 +5,10 @@ import com.example.rules.core.arbiter.ArbiterFactory;
 import com.example.rules.core.context.RuleContextFactory;
 import com.example.rules.core.domain.RuleLog;
 import com.example.rules.core.repository.RuleLogRepository;
-import com.example.rules.spi.store.ResultStore;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.session.RuleCancellationEvent;
+import com.example.rules.spi.store.ResultStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
@@ -149,7 +149,15 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     public long findId(RuleRequest request) {
-        return -1;
+        if (logRepository != null) {
+            return logRepository.findByRequestClassAndRequestHashOrderByCreateTimeDesc(request.getClass().getName(), request.hashCode())
+                    .filter(l -> request.equals(RuleSerializer.deserialize(l.getRequestData())))
+                    .map(RuleLog::getId)
+                    .findFirst()
+                    .orElse(-1L);
+        } else {
+            return -1;
+        }
     }
 
     @Override
