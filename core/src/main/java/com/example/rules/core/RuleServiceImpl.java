@@ -124,7 +124,7 @@ public class RuleServiceImpl implements RuleService {
             });
         }
         if (resultStore != null) {
-            resultStore.upload(runId, result);
+            resultStore.save(runId, result);
         }
     }
 
@@ -141,7 +141,7 @@ public class RuleServiceImpl implements RuleService {
     @Override
     public <T extends RuleResult> T getResult(long ruleId) {
         if (resultStore != null) {
-            return resultStore.download(ruleId);
+            return resultStore.load(ruleId);
         } else {
             return null;
         }
