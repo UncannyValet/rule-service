@@ -39,11 +39,11 @@ public class ExecutorConfig {
         return executor;
     }
 
-    @Bean("kieUpdateScheduler")
-    public TaskScheduler updateScheduler() {
-        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(2);
-        scheduler.setThreadNamePrefix("Kie Update");
-        return scheduler;
-    }
+//    @Bean("kieUpdateScheduler")
+//    public TaskScheduler updateScheduler() {
+//        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+//        scheduler.setPoolSize(2);
+//        scheduler.setThreadNamePrefix("Kie Update");
+//        return scheduler;
+//    }
 }

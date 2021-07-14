@@ -1,71 +1,30 @@
 package com.example.rules.core.session;
 
-import com.example.rules.api.*;
+import com.example.rules.api.RuleInfo;
+import com.example.rules.api.RuleRequest;
 import com.example.rules.core.drools.DroolsContainer;
-import com.example.rules.core.drools.RuleUpdateWorker;
-import com.example.rules.spi.session.RuleContainer;
-import com.example.rules.spi.session.RuleSession;
-import com.example.rules.spi.session.SessionFactory;
+import com.example.rules.spi.session.*;
 import org.kie.api.KieServices;
-import org.kie.api.builder.KieScanner;
-import org.kie.api.builder.ReleaseId;
-import org.kie.api.event.kiescanner.KieScannerEventListener;
-import org.kie.api.event.kiescanner.KieScannerStatusChangeEvent;
-import org.kie.api.event.kiescanner.KieScannerUpdateResultsEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.example.rules.api.ErrorNumbers.DUPLICATE_CONTAINER;
 
 @Component
 public class SessionFactoryImpl implements SessionFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(SessionFactoryImpl.class);
 
-    private final KieServices kieServices;
     private final Map<RuleContainer, Set<String>> containers = new ConcurrentHashMap<>();
-    private final Map<String, Future<?>> containerUpdates = new ConcurrentHashMap<>();
     private final Map<Class<? extends RuleRequest>, Set<String>> registeredSessions = new ConcurrentHashMap<>();
     private final RuleContainer defaultContainer;
 
-    private TaskScheduler scheduler;
-
     public SessionFactoryImpl() {
-        kieServices = KieServices.get();
-        defaultContainer = new DroolsContainer(kieServices.getKieClasspathContainer());
-    }
-
-    @Autowired
-    @Qualifier("kieUpdateScheduler")
-    public void setScheduler(TaskScheduler scheduler) {
-        this.scheduler = scheduler;
-    }
-
-    @Override
-    public synchronized void registerContainer(String groupId, String artifactId, String versionRange) {
-        String key = groupId + ":" + artifactId;
-        ReleaseId releaseId = kieServices.newReleaseId(groupId, artifactId, versionRange);
-        if (containers.keySet().stream()
-                .map(RuleContainer::getId)
-                .anyMatch(key::equalsIgnoreCase)) {
-            throw new RuleException(DUPLICATE_CONTAINER, key);
-        }
-
-        DroolsContainer container = new DroolsContainer(kieServices.newKieContainer(releaseId));
-        registerContainer(container);
-        scheduleUpdates(container);
+        defaultContainer = new DroolsContainer(KieServices.get().getKieClasspathContainer());
     }
 
     @Override
@@ -79,41 +38,12 @@ public class SessionFactoryImpl implements SessionFactory {
 
     @Override
     public synchronized void deregisterContainer(String id) {
-        Future<?> future = containerUpdates.get(id);
-        if (future != null) {
-            future.cancel(false);
-            containerUpdates.remove(id);
-        }
-
         containers.keySet().stream()
                 .filter(c -> id.equalsIgnoreCase(c.getId()))
                 .findAny()
                 .ifPresent(containers::remove);
 
         LOG.info("De-registered container '" + id + "'");
-    }
-
-    /**
-     * Schedules a KieScanner to monitor Maven for new versions of this container.
-     *
-     * @param container the DroolsContainer to update
-     */
-    private void scheduleUpdates(DroolsContainer container) {
-        String id = container.getId();
-        try {
-            int interval = 5;
-            KieScanner scanner = kieServices.newKieScanner(container.getKieContainer());
-            scanner.addListener(new ScannerListener(container));
-            LOG.info("Scheduling rules container '" + id + "' to scan for updates every " + interval + "s");
-            ScheduledFuture<?> future = scheduler.scheduleWithFixedDelay(new RuleUpdateWorker(scanner), Duration.ofMinutes(interval));
-            Future<?> oldFuture = containerUpdates.put(id, future);
-            if (oldFuture != null) {
-                // In case the old future is still in there
-                oldFuture.cancel(false);
-            }
-        } catch (RuntimeException e) {
-            LOG.error("Failed to schedule scanner for container " + id, e);
-        }
     }
 
     /**
@@ -238,24 +168,5 @@ public class SessionFactoryImpl implements SessionFactory {
                 .map(Map.Entry::getKey)
                 .findAny()
                 .orElse(defaultContainer);
-    }
-
-    private class ScannerListener implements KieScannerEventListener {
-
-        private final DroolsContainer container;
-
-        ScannerListener(DroolsContainer container) {
-            this.container = container;
-        }
-
-        @Override
-        public void onKieScannerStatusChangeEvent(KieScannerStatusChangeEvent event) {
-            // Scans are performed manually, scanner state is not used
-        }
-
-        @Override
-        public void onKieScannerUpdateResultsEvent(KieScannerUpdateResultsEvent event) {
-            registerContainerSessions(container);
-        }
     }
 }
