@@ -4,9 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @Configuration
 public class ExecutorConfig {
@@ -38,12 +36,4 @@ public class ExecutorConfig {
         executor.setWaitForTasksToCompleteOnShutdown(false);
         return executor;
     }
-
-//    @Bean("kieUpdateScheduler")
-//    public TaskScheduler updateScheduler() {
-//        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-//        scheduler.setPoolSize(2);
-//        scheduler.setThreadNamePrefix("Kie Update");
-//        return scheduler;
-//    }
 }

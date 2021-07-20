@@ -92,7 +92,7 @@ public class RuleServiceImpl implements RuleService {
     private long onStart(RuleRequest request) {
         if (logRepository != null) {
             RuleLog logEntry = new RuleLog();
-            logEntry.setState("CREATED");
+            logEntry.setState(RuleRequest.State.PENDING);
             logEntry.setRequestClass(request.getClass().getName());
             logEntry.setRequestHash(request.hashCode());
             logEntry.setRequestData(RuleSerializer.serialize(request));
@@ -107,7 +107,7 @@ public class RuleServiceImpl implements RuleService {
         if (logRepository != null) {
             logRepository.findById(runId).ifPresent(log -> {
                 log.setUpdateTime(LocalDateTime.now());
-                log.setState("RUNNING");
+                log.setState(RuleRequest.State.RUNNING);
                 logRepository.save(log);
             });
         }
@@ -117,7 +117,7 @@ public class RuleServiceImpl implements RuleService {
         if (logRepository != null) {
             logRepository.findById(runId).ifPresent(log -> {
                 log.setUpdateTime(LocalDateTime.now());
-                log.setState("SUCCESS");
+                log.setState(RuleRequest.State.SUCCESS);
                 log.setResultClass(result.getClass().getName());
                 log.setResultDescription(result.getDescription());
                 logRepository.save(log);
@@ -132,7 +132,7 @@ public class RuleServiceImpl implements RuleService {
         if (logRepository != null) {
             logRepository.findById(runId).ifPresent(log -> {
                 log.setUpdateTime(LocalDateTime.now());
-                log.setState("FAILURE");
+                log.setState(RuleRequest.State.FAILURE);
                 logRepository.save(log);
             });
         }
@@ -150,10 +150,8 @@ public class RuleServiceImpl implements RuleService {
     @Override
     public long findId(RuleRequest request) {
         if (logRepository != null) {
-            return logRepository.findByRequestClassAndRequestHashOrderByCreateTimeDesc(request.getClass().getName(), request.hashCode())
-                    .filter(l -> request.equals(RuleSerializer.deserialize(l.getRequestData())))
+            return logRepository.findMostRecentRequest(request)
                     .map(RuleLog::getId)
-                    .findFirst()
                     .orElse(-1L);
         } else {
             return -1;
@@ -168,13 +166,17 @@ public class RuleServiceImpl implements RuleService {
     }
 
     @Override
-    public Class<? extends RuleResult> getResultClass(RuleRequest request) {
-        return arbiterFactory.getResultClass(request.getClass());
+    public Class<? extends RuleResult> getResultClass(Class<? extends RuleRequest> requestClass) {
+        return arbiterFactory.getResultClass(requestClass);
     }
 
     @Override
-    public Class<? extends RuleResult> getResultClass(Class<? extends RuleRequest> requestClass) {
-        return arbiterFactory.getResultClass(requestClass);
+    public RuleRequest.State getState(long ruleId) {
+        if (logRepository != null) {
+            return logRepository.findById(ruleId).map(RuleLog::getState).orElse(null);
+        } else {
+            return null;
+        }
     }
 
     @Override

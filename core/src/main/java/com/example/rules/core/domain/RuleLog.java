@@ -1,5 +1,7 @@
 package com.example.rules.core.domain;
 
+import com.example.rules.api.RuleRequest;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -16,8 +18,8 @@ public class RuleLog {
 
     private LocalDateTime updateTime = LocalDateTime.now();
 
-    @Column(updatable = false)
-    private String state;
+    @Column
+    private RuleRequest.State state;
 
     @Column(updatable = false)
     private String requestClass;
@@ -61,11 +63,11 @@ public class RuleLog {
         this.updateTime = updateTime;
     }
 
-    public String getState() {
+    public RuleRequest.State getState() {
         return state;
     }
 
-    public void setState(String state) {
+    public void setState(RuleRequest.State state) {
         this.state = state;
     }
 

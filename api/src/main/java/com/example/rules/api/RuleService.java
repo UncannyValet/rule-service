@@ -56,14 +56,6 @@ public interface RuleService {
     Collection<String> getKnownRequests();
 
     /**
-     * Gets the class of the RuleResult that would be returned for a given request
-     *
-     * @param request the RuleRequest
-     * @return the class of the resulting RuleResult
-     */
-    Class<? extends RuleResult> getResultClass(RuleRequest request);
-
-    /**
      * Gets the class of the RuleResult that would be returned for a given request class
      *
      * @param requestClass the RuleRequest class
@@ -71,13 +63,13 @@ public interface RuleService {
      */
     Class<? extends RuleResult> getResultClass(Class<? extends RuleRequest> requestClass);
 
-//    /**
-//     * Returns the state of a rule run
-//     *
-//     * @param ruleId the ID of a rule run
-//     * @return the run state (INIT, RUNNING, SUCCESS, FAILURE), or null if the run is either expired or never scheduled
-//     */
-//    Action.State getStatus(String ruleId);
+    /**
+     * Returns the state of a rule run
+     *
+     * @param ruleId the ID of a rule run
+     * @return the run state (RUNNING, SUCCESS, etc), or null if the run is either expired or never scheduled
+     */
+    RuleRequest.State getState(long ruleId);
 
     /**
      * Cancels a rule run
