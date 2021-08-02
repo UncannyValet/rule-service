@@ -6,17 +6,13 @@ import com.example.rules.spi.compiler.RulePackage;
 import com.example.rules.spi.session.RuleSession;
 import org.kie.api.KieServices;
 import org.kie.api.builder.*;
-import org.kie.api.builder.model.KieBaseModel;
-import org.kie.api.builder.model.KieModuleModel;
-import org.kie.api.builder.model.KieSessionModel;
+import org.kie.api.builder.model.*;
 import org.kie.api.conf.EqualityBehaviorOption;
 import org.kie.api.conf.EventProcessingOption;
 import org.kie.api.runtime.KieContainer;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.example.rules.api.ErrorNumbers.COMPILATION_FAILURE;
 
 public class RulePackageImpl implements RulePackage {
 
@@ -92,7 +88,7 @@ public class RulePackageImpl implements RulePackage {
             Results results = compile(releaseId);
 
             if (!results.getMessages().isEmpty()) {
-                throw new RuleException(COMPILATION_FAILURE, pkg, results.getMessages());
+                throw new RuleException("Failed to compile rules for package " + pkg + ": \n" + results.getMessages());
             }
 
             KieContainer container = kieServices.newKieContainer(releaseId);

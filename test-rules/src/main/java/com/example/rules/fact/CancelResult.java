@@ -1,6 +1,6 @@
 package com.example.rules.fact;
 
-import com.example.rules.api.RuleResult;
+import java.io.Serializable;
 
-public class CancelResult implements RuleResult {
+public class CancelResult implements Serializable {
 }

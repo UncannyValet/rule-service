@@ -1,6 +1,6 @@
 package com.example.rules.spi.processor;
 
-import com.example.rules.api.RuleResult;
+import java.io.Serializable;
 
-public class TestResult implements RuleResult {
+public class TestResult implements Serializable {
 }

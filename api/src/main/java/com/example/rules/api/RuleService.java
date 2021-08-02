@@ -1,5 +1,6 @@
 package com.example.rules.api;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.concurrent.Future;
 
@@ -22,23 +23,23 @@ public interface RuleService {
      * @param request the RuleRequest
      * @return a Future used to track the run
      */
-    Future<RuleResult> submit(RuleRequest request);
+    Future<Serializable> submit(RuleRequest request);
 
     /**
      * Executes a synchronous rule run against a given request
      *
      * @param request the RuleRequest
-     * @return the RuleResult of the run
+     * @return the result of the run
      */
-    <T extends RuleResult> T run(RuleRequest request);
+    <T extends Serializable> T run(RuleRequest request);
 
     /**
      * Returns the result of a rule run
      *
      * @param ruleId the ID of a rule run
-     * @return the RuleResult of the action (which may be partially complete), or {@code null} if the run is either expired or never scheduled
+     * @return the result of the run, or {@code null} if the run is either expired, never scheduled or not persisted
      */
-    <T extends RuleResult> T getResult(long ruleId);
+    <T extends Serializable> T getResult(long ruleId);
 
     /**
      * Returns the ID of a rule run request previously executed on this request
@@ -49,25 +50,10 @@ public interface RuleService {
     long findId(RuleRequest request);
 
     /**
-     * Retrieves a Collection of known Request fully-qualified class names
-     *
-     * @return a Collection of known Request fully-qualified class names
-     */
-    Collection<String> getKnownRequests();
-
-    /**
-     * Gets the class of the RuleResult that would be returned for a given request class
-     *
-     * @param requestClass the RuleRequest class
-     * @return the class of the resulting RuleResult
-     */
-    Class<? extends RuleResult> getResultClass(Class<? extends RuleRequest> requestClass);
-
-    /**
      * Returns the state of a rule run
      *
      * @param ruleId the ID of a rule run
-     * @return the run state (RUNNING, SUCCESS, etc), or null if the run is either expired or never scheduled
+     * @return the run state (RUNNING, SUCCESS, etc.), or null if the run is either expired or never scheduled
      */
     RuleRequest.State getState(long ruleId);
 
@@ -79,16 +65,25 @@ public interface RuleService {
     void cancel(long ruleId);
 
     /**
-     * Returns a Collection of RuleInfo for all of the rule objects known by this instance
+     * Retrieves a Collection of known Request classes
+     */
+    Collection<Class<? extends RuleRequest>> getKnownRequests();
+
+    /**
+     * Gets the class of the result that would be returned for a given request class
      *
-     * @return a Collection of RuleInfo
+     * @param requestClass the RuleRequest class
+     * @return the class of the result
+     */
+    Class<? extends Serializable> getResultClass(Class<? extends RuleRequest> requestClass);
+
+    /**
+     * Returns a Collection of RuleInfo for all the rule objects known by this instance
      */
     Collection<RuleInfo> getRuleInfo();
 
     /**
-     * Returns a Collection of RuleInfo for all of the rule objects related to the given request class
-     *
-     * @return a Collection of RuleInfo
+     * Returns a Collection of RuleInfo for all the rule objects related to the given request class
      */
     Collection<RuleInfo> getRuleInfo(Class<? extends RuleRequest> requestClass);
 }

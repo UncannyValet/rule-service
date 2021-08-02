@@ -1,7 +1,7 @@
 package com.example.rules.core.context;
 
 import com.example.rules.api.*;
-import com.example.rules.core.investigator.InvestigatorFactory;
+import com.example.rules.core.processor.InvestigatorFactory;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.RuleStats;
 import com.example.rules.spi.investigator.Investigator;
@@ -13,10 +13,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static com.example.rules.api.ErrorNumbers.INVESTIGATOR_FAILURE;
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
 @Component
@@ -37,7 +37,7 @@ public class RuleContextImpl implements RuleContext {
     private final Map<Investigator<?, ?>, CompletableFuture<Investigator<?, ?>>> running = new IdentityHashMap<>();
     private final RuleStats statistics = new RuleStatsImpl();
 
-    private RuleResult result;
+    private Serializable result;
     private boolean stopped;
 
     public RuleContextImpl(long id, RuleRequest request) {
@@ -74,12 +74,12 @@ public class RuleContextImpl implements RuleContext {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends RuleResult> T getResult() {
+    public <T extends Serializable> T getResult() {
         return (T)result;
     }
 
     @Override
-    public void setResult(RuleResult result) {
+    public void setResult(Serializable result) {
         this.result = result;
     }
 
@@ -129,7 +129,7 @@ public class RuleContextImpl implements RuleContext {
                 // Request cancelled, cancel spawned investigators as well
                 running.values().forEach(f -> f.cancel(true));
             } catch (ExecutionException e) {
-                throw new RuleException(e, INVESTIGATOR_FAILURE);
+                throw new RuleException("Investigation failure", e);
             }
         }
     }

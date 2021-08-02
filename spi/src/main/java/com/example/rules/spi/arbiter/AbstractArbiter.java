@@ -1,8 +1,6 @@
 package com.example.rules.spi.arbiter;
 
-import com.example.rules.api.RuleException;
-import com.example.rules.api.RuleRequest;
-import com.example.rules.api.RuleResult;
+import com.example.rules.api.*;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.RuleStats;
 import com.example.rules.spi.session.RuleCancellationEvent;
@@ -13,20 +11,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static com.example.rules.api.ErrorNumbers.PROCESS_FAILURE;
-import static com.example.rules.api.ErrorNumbers.RESULT_INSTANTIATION;
 
 /**
  * An abstract implementation of the Arbiter interface, to minimize the effort required to implement this interface
  *
  * @param <R> the RuleRequest class associated with this Arbiter
- * @param <O> the RuleResult class associated with this Arbiter
+ * @param <O> the result class associated with this Arbiter
  */
-public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResult> implements Arbiter<R, O> {
+public abstract class AbstractArbiter<R extends RuleRequest, O extends Serializable> implements Arbiter<R, O> {
 
     private static final String[] EMPTY_RULE_SET = new String[]{};
     private static final Map<Class<?>, Class<?>> resultClasses = new ConcurrentHashMap<>();
@@ -47,9 +43,9 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
         @SuppressWarnings("unchecked")
         Class<O> resultClass = (Class<O>)resultClasses.computeIfAbsent(getClass(), clazz -> ClassUtils.getTypeArgument(clazz, Arbiter.class, 1));
         if (resultClass == null) {
-            throw new RuleException(RESULT_INSTANTIATION);
+            throw new RuleException("Failed to instantiate result object");
         }
-        RuleResult r = context.getResult();
+        Serializable r = context.getResult();
         if (r == null) {
             result = ClassUtils.instantiate(resultClass);
         } else {
@@ -69,9 +65,9 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
     }
 
     /**
-     * Gets the RulesResult this processor was initialized with (or created)
+     * Gets the result this processor was initialized with (or created)
      *
-     * @return the RulesResult
+     * @return the result
      */
     protected final O getResult() {
         return result;
@@ -93,7 +89,7 @@ public abstract class AbstractArbiter<R extends RuleRequest, O extends RuleResul
                 // Session cancelled, here or in Investigator
                 throw new CancellationException();
             }
-            throw new RuleException(e, PROCESS_FAILURE, context.getRequest().getName());
+            throw new RuleException("Failed to process request " + context.getRequest().getClass().getSimpleName(), e);
         } finally {
             LOG.debug(context.getId() + " finished");
         }

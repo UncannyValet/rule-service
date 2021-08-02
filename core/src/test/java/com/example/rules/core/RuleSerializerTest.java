@@ -1,5 +1,6 @@
-package com.example.rules.api;
+package com.example.rules.core;
 
+import com.example.rules.core.repository.RuleSerializer;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;

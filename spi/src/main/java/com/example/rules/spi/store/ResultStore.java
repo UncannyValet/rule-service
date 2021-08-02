@@ -1,10 +1,10 @@
 package com.example.rules.spi.store;
 
-import com.example.rules.api.RuleResult;
+import java.io.Serializable;
 
 public interface ResultStore {
 
-    <T extends RuleResult> void save(long ruleId, T result);
+    <T extends Serializable> void save(long ruleId, T result);
 
-    <T extends RuleResult> T load(long ruleId);
+    <T extends Serializable> T load(long ruleId);
 }

@@ -1,4 +1,4 @@
-package com.example.rules.core.investigator;
+package com.example.rules.core.processor;
 
 import com.example.rules.api.RuleRequest;
 import com.example.rules.spi.RuleContext;

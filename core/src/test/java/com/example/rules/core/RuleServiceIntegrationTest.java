@@ -1,7 +1,7 @@
 package com.example.rules.core;
 
 import com.example.rules.api.*;
-import com.example.rules.core.arbiter.ArbiterFactory;
+import com.example.rules.core.processor.ArbiterFactory;
 import com.example.rules.core.context.RuleContextFactory;
 import com.example.rules.core.processor.TestArbiter;
 import com.example.rules.fact.TestRequest;
@@ -11,6 +11,8 @@ import com.example.rules.spi.arbiter.Arbiter;
 import org.junit.jupiter.api.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import java.io.Serializable;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,7 +35,7 @@ public class RuleServiceIntegrationTest {
     public void findArbiter() {
         RuleContextFactory factory = context.getBean(RuleContextFactory.class);
         RuleContext ruleContext = factory.newContext(new TestRequest(5), 1);
-        Arbiter<RuleRequest, ? extends RuleResult> arbiter = context.getBean(ArbiterFactory.class).getArbiter(ruleContext);
+        Arbiter<RuleRequest, ? extends Serializable> arbiter = context.getBean(ArbiterFactory.class).getArbiter(ruleContext);
         assertNotNull(arbiter);
         assertTrue(TestArbiter.class.isInstance(arbiter));
     }

@@ -1,5 +1,6 @@
-package com.example.rules.api;
+package com.example.rules.core.repository;
 
+import com.example.rules.api.RuleException;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
 import org.apache.commons.lang3.StringUtils;
@@ -10,8 +11,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterOutputStream;
-
-import static com.example.rules.api.ErrorNumbers.*;
 
 public class RuleSerializer {
 
@@ -64,7 +63,7 @@ public class RuleSerializer {
             String s = serializeAsString(o);
             return compress(s);
         } catch (IOException | RuntimeException e) {
-            throw new RuleException(e, SERIALIZATION_ERROR);
+            throw new RuleException("Failed to serialize object " + o.getClass().getName(), e);
         }
     }
 
@@ -85,7 +84,7 @@ public class RuleSerializer {
         } catch (RuleException r) {
             throw r;
         } catch (IOException | RuntimeException e) {
-            throw new RuleException(e, DESERIALIZATION_ERROR);
+            throw new RuleException("Failed to deserialize object", e);
         }
     }
 
@@ -100,7 +99,7 @@ public class RuleSerializer {
         try {
             return StringUtils.isNotEmpty(s) ? (T)xstream.fromXML(s) : null;
         } catch (RuntimeException e) {
-            throw new RuleException(e, UNKNOWN_RULE_TYPE, s.length() < 128 ? s : s.substring(0, 124) + "...");
+            throw new RuleException("Failed to deserialize object", e);
         }
     }
 

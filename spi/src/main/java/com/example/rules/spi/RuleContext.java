@@ -1,8 +1,9 @@
 package com.example.rules.spi;
 
 import com.example.rules.api.RuleRequest;
-import com.example.rules.api.RuleResult;
 import com.example.rules.spi.session.RuleSession;
+
+import java.io.Serializable;
 
 /**
  * A context containing information about a rule run
@@ -24,18 +25,18 @@ public interface RuleContext {
     <T extends RuleRequest> T getRequest();
 
     /**
-     * Retrieves the current RulesResult, can be null if no result has been set yet
+     * Retrieves the current result, can be null if no result has been set yet
      *
-     * @return the current RulesResult
+     * @return the current result
      */
-    <T extends RuleResult> T getResult();
+    <T extends Serializable> T getResult();
 
     /**
-     * Updates the RulesResult, making it available to service calls
+     * Updates the result, making it available to service calls
      *
-     * @param result the RulesResult to provide
+     * @param result the result to provide
      */
-    void setResult(RuleResult result);
+    void setResult(Serializable result);
 
     /**
      * Sets an arbitrary attribute in the Context, available to all later processors

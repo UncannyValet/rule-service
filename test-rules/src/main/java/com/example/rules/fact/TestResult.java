@@ -1,11 +1,10 @@
 package com.example.rules.fact;
 
-import com.example.rules.api.RuleResult;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TestResult implements RuleResult {
+public class TestResult implements Serializable {
 
     private List<String> messages = new ArrayList<>();
 

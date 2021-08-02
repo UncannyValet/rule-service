@@ -1,7 +1,6 @@
 package com.example.rules.core.repository;
 
 import com.example.rules.api.RuleRequest;
-import com.example.rules.api.RuleSerializer;
 import com.example.rules.core.domain.RuleLog;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.repository.CrudRepository;

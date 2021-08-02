@@ -1,7 +1,6 @@
 package com.example.rules.spi.utils;
 
 import com.example.rules.api.RuleException;
-import com.example.rules.api.RuleResult;
 import com.example.rules.spi.arbiter.AbstractArbiter;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.processor.TestArbiter;
@@ -10,6 +9,8 @@ import com.example.rules.spi.processor.TestResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.io.Serializable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,7 +24,7 @@ public class ClassUtilsTest {
         assertFalse(ClassUtils.canInstantiate(Arbiter.class));
 
         assertNotNull(ClassUtils.instantiate(TestResult.class));
-        assertThrows(RuleException.class, () -> ClassUtils.instantiate(RuleResult.class));
+        assertThrows(RuleException.class, () -> ClassUtils.instantiate(Serializable.class));
     }
 
     @Test

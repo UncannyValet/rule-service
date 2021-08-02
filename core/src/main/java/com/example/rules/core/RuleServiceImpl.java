@@ -1,10 +1,11 @@
 package com.example.rules.core;
 
 import com.example.rules.api.*;
-import com.example.rules.core.arbiter.ArbiterFactory;
+import com.example.rules.core.processor.ArbiterFactory;
 import com.example.rules.core.context.RuleContextFactory;
 import com.example.rules.core.domain.RuleLog;
 import com.example.rules.core.repository.RuleLogRepository;
+import com.example.rules.core.repository.RuleSerializer;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.session.RuleCancellationEvent;
@@ -15,11 +16,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 @Service
 public class RuleServiceImpl implements RuleService {
@@ -56,7 +58,7 @@ public class RuleServiceImpl implements RuleService {
     }
 
     @Override
-    public Future<RuleResult> submit(RuleRequest request) {
+    public Future<Serializable> submit(RuleRequest request) {
         long runId = onStart(request);
         return arbiterExecutor.submit(() -> run(request, runId));
     }
@@ -69,12 +71,12 @@ public class RuleServiceImpl implements RuleService {
     }
 
     @Override
-    public <T extends RuleResult> T run(RuleRequest request) {
+    public <T extends Serializable> T run(RuleRequest request) {
         long runId = onStart(request);
         return run(request, runId);
     }
 
-    private <T extends RuleResult> T run(RuleRequest request, long runId) {
+    private <T extends Serializable> T run(RuleRequest request, long runId) {
         onRunning(runId);
 
         try {
@@ -96,7 +98,7 @@ public class RuleServiceImpl implements RuleService {
             logEntry.setRequestClass(request.getClass().getName());
             logEntry.setRequestHash(request.hashCode());
             logEntry.setRequestData(RuleSerializer.serialize(request));
-            logEntry.setRequestDescription(request.getDescription());
+            logEntry.setRequestDescription(request.toString());
             return logRepository.save(logEntry).getId();
         } else {
             return idGenerator.getAndIncrement();
@@ -113,13 +115,13 @@ public class RuleServiceImpl implements RuleService {
         }
     }
 
-    private void onSuccess(long runId, RuleResult result) {
+    private void onSuccess(long runId, Serializable result) {
         if (logRepository != null) {
             logRepository.findById(runId).ifPresent(log -> {
                 log.setUpdateTime(LocalDateTime.now());
                 log.setState(RuleRequest.State.SUCCESS);
                 log.setResultClass(result.getClass().getName());
-                log.setResultDescription(result.getDescription());
+                log.setResultDescription(result.toString());
                 logRepository.save(log);
             });
         }
@@ -139,7 +141,7 @@ public class RuleServiceImpl implements RuleService {
     }
 
     @Override
-    public <T extends RuleResult> T getResult(long ruleId) {
+    public <T extends Serializable> T getResult(long ruleId) {
         if (resultStore != null) {
             return resultStore.load(ruleId);
         } else {
@@ -159,14 +161,12 @@ public class RuleServiceImpl implements RuleService {
     }
 
     @Override
-    public Collection<String> getKnownRequests() {
-        return arbiterFactory.getKnownRequests().stream()
-                .map(Class::getName)
-                .collect(Collectors.toList());
+    public Collection<Class<? extends RuleRequest>> getKnownRequests() {
+        return new ArrayList<>(arbiterFactory.getKnownRequests());
     }
 
     @Override
-    public Class<? extends RuleResult> getResultClass(Class<? extends RuleRequest> requestClass) {
+    public Class<? extends Serializable> getResultClass(Class<? extends RuleRequest> requestClass) {
         return arbiterFactory.getResultClass(requestClass);
     }
 
