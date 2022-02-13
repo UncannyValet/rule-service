@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 public class RuleServiceImpl implements RuleService {
@@ -142,11 +143,7 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     public <T extends Serializable> T getResult(long ruleId) {
-        if (resultStore != null) {
-            return resultStore.load(ruleId);
-        } else {
-            return null;
-        }
+        return resultStore != null ? resultStore.load(ruleId) : null;
     }
 
     @Override
@@ -188,11 +185,15 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     public Collection<RuleInfo> getRuleInfo() {
-        return null;
+        return getKnownRequests().stream()
+                .map(this::getRuleInfo)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<RuleInfo> getRuleInfo(Class<? extends RuleRequest> requestClass) {
+        // TODO Translate internal rules for info
         return null;
     }
 }

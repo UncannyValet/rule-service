@@ -82,9 +82,10 @@ public interface RuleSession extends AutoCloseable {
     /**
      * Externally assign a logger to be used by this session
      *
-     * @param log the ILogger to use for the session
+     * @param log the Logger to use for the session
      */
-    void setLogger(Logger log);
+    default void setLogger(Logger log) {
+    }
 
     /**
      * Returns a Map of Rule IDs with a count of the times each was triggered
