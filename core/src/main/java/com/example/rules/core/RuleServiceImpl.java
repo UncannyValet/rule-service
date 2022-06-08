@@ -10,6 +10,7 @@ import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.session.RuleCancellationEvent;
 import com.example.rules.spi.store.ResultStore;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RuleServiceImpl implements RuleService {
 
     private final ArbiterFactory arbiterFactory;
@@ -35,12 +37,6 @@ public class RuleServiceImpl implements RuleService {
     private RuleLogRepository logRepository;
     private ResultStore resultStore;
     private AsyncTaskExecutor arbiterExecutor;
-
-    public RuleServiceImpl(ArbiterFactory arbiterFactory, RuleContextFactory ruleContextFactory, ApplicationEventPublisher eventPublisher) {
-        this.arbiterFactory = arbiterFactory;
-        this.ruleContextFactory = ruleContextFactory;
-        this.eventPublisher = eventPublisher;
-    }
 
     @Autowired(required = false)
     public void setLogRepository(RuleLogRepository logRepository) {

@@ -6,6 +6,7 @@ import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.RuleStats;
 import com.example.rules.spi.investigator.Investigator;
 import com.example.rules.spi.session.*;
+import lombok.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
@@ -21,12 +22,13 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 
 @Component
 @Scope(SCOPE_PROTOTYPE)
+@RequiredArgsConstructor
 public class RuleContextImpl implements RuleContext {
 
     @SuppressWarnings("unchecked")
     private static final CompletableFuture<Investigator<?, ?>>[] FUTURE_ARRAY = new CompletableFuture[]{};
 
-    private final long id;
+    @Getter private final long id;
     private final RuleRequest request;
 
     private SessionFactory sessionFactory;
@@ -35,15 +37,10 @@ public class RuleContextImpl implements RuleContext {
 
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
     private final Map<Investigator<?, ?>, CompletableFuture<Investigator<?, ?>>> running = new IdentityHashMap<>();
-    private final RuleStats statistics = new RuleStatsImpl();
+    @Getter private final RuleStats stats = new RuleStatsImpl();
 
-    private Serializable result;
-    private boolean stopped;
-
-    public RuleContextImpl(long id, RuleRequest request) {
-        this.id = id;
-        this.request = request;
-    }
+    @Setter private Serializable result;
+    @Getter private boolean stopped;
 
     @Autowired
     public void setSessionFactory(SessionFactory sessionFactory) {
@@ -62,11 +59,6 @@ public class RuleContextImpl implements RuleContext {
     }
 
     @Override
-    public long getId() {
-        return id;
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public <T extends RuleRequest> T getRequest() {
         return (T)request;
@@ -79,11 +71,6 @@ public class RuleContextImpl implements RuleContext {
     }
 
     @Override
-    public void setResult(Serializable result) {
-        this.result = result;
-    }
-
-    @Override
     public void setAttribute(String name, Object value) {
         attributes.put(name, value);
     }
@@ -92,11 +79,6 @@ public class RuleContextImpl implements RuleContext {
     @SuppressWarnings("unchecked")
     public <T> T getAttribute(String name) {
         return (T)attributes.get(name);
-    }
-
-    @Override
-    public RuleStats getStats() {
-        return statistics;
     }
 
     @Override
@@ -132,11 +114,6 @@ public class RuleContextImpl implements RuleContext {
                 throw new RuleException("Investigation failure", e);
             }
         }
-    }
-
-    @Override
-    public boolean isStopped() {
-        return stopped;
     }
 
     private CompletableFuture<Investigator<?, ?>> schedule(Investigator<?, ?> investigator, RuleSession session) {

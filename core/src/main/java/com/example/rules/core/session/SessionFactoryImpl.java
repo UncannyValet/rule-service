@@ -4,9 +4,8 @@ import com.example.rules.api.RuleInfo;
 import com.example.rules.api.RuleRequest;
 import com.example.rules.core.drools.DroolsContainer;
 import com.example.rules.spi.session.*;
+import lombok.extern.slf4j.Slf4j;
 import org.kie.api.KieServices;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -14,10 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 @Component
 public class SessionFactoryImpl implements SessionFactory {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SessionFactoryImpl.class);
 
     private final Map<RuleContainer, Set<String>> containers = new ConcurrentHashMap<>();
     private final Map<Class<? extends RuleRequest>, Set<String>> registeredSessions = new ConcurrentHashMap<>();
@@ -32,7 +30,7 @@ public class SessionFactoryImpl implements SessionFactory {
         containers.remove(container);
         containers.put(container, Collections.emptySet());
         String id = container.getId();
-        LOG.info("Registered container '" + id + "'");
+        log.info("Registered container '" + id + "'");
         registerContainerSessions(container);
     }
 
@@ -43,7 +41,7 @@ public class SessionFactoryImpl implements SessionFactory {
                 .findAny()
                 .ifPresent(containers::remove);
 
-        LOG.info("De-registered container '" + id + "'");
+        log.info("De-registered container '" + id + "'");
     }
 
     /**
@@ -57,7 +55,7 @@ public class SessionFactoryImpl implements SessionFactory {
         if (containers.containsKey(container)) {
             // Protect against cases where a container has been de-registered but the update worker is still running
             containers.put(container, sessions);
-            LOG.info("Rules container '" + container.getId() + "' available, provides sessions " + sessions);
+            log.info("Rules container '" + container.getId() + "' available, provides sessions " + sessions);
         }
     }
 
@@ -71,7 +69,7 @@ public class SessionFactoryImpl implements SessionFactory {
     public void registerSession(Class<? extends RuleRequest> requestClass, String sessionId) {
         synchronized (registeredSessions) {
             registeredSessions.computeIfAbsent(requestClass, k -> new HashSet<>()).add(sessionId);
-            LOG.info("Registered session '" + sessionId + "' for request type '" + requestClass.getSimpleName() + "'");
+            log.info("Registered session '" + sessionId + "' for request type '" + requestClass.getSimpleName() + "'");
         }
     }
 
@@ -86,10 +84,10 @@ public class SessionFactoryImpl implements SessionFactory {
             Collection<String> sessions = registeredSessions.get(requestClass);
             if (sessions != null) {
                 sessions.remove(sessionId);
-                LOG.info("De-registered session '" + sessionId + "' for request type '" + requestClass.getSimpleName() + "'");
+                log.info("De-registered session '" + sessionId + "' for request type '" + requestClass.getSimpleName() + "'");
                 if (sessions.isEmpty()) {
                     registeredSessions.remove(requestClass);
-                    LOG.info("Request type '" + requestClass.getSimpleName() + "' has no configured sessions remaining");
+                    log.info("Request type '" + requestClass.getSimpleName() + "' has no configured sessions remaining");
                 }
             }
         }
@@ -136,7 +134,7 @@ public class SessionFactoryImpl implements SessionFactory {
                 .map(id -> {
                     RuleSession session = getSession(id);
                     if (session == null) {
-                        LOG.error("Unknown rules session '" + id + "'");
+                        log.error("Unknown rules session '" + id + "'");
                     }
                     return session;
                 })

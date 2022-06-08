@@ -1,6 +1,7 @@
 package com.example.rules.core.drools;
 
 import com.example.rules.api.RuleInfo;
+import lombok.RequiredArgsConstructor;
 import org.kie.api.builder.ReleaseId;
 import org.kie.api.definition.KiePackage;
 import org.kie.api.definition.rule.Global;
@@ -56,19 +57,13 @@ public class DroolsInfoExtractor implements Function<KieContainer, Stream<RuleIn
                 });
     }
 
+    @RequiredArgsConstructor
     private abstract static class InfoMapper<T> implements Function<KiePackage, Stream<RuleInfo>> {
 
         private final RuleInfo.Type type;
         private final Function<KiePackage, Collection<T>> items;
         private final Function<T, String> name;
         private final Function<T, Map<String, Object>> attributes;
-
-        InfoMapper(RuleInfo.Type type, Function<KiePackage, Collection<T>> itemExtractor, Function<T, String> nameExtractor, Function<T, Map<String, Object>> attributeExtractor) {
-            this.type = type;
-            this.items = itemExtractor;
-            this.name = nameExtractor;
-            this.attributes = attributeExtractor;
-        }
 
         @Override
         public Stream<RuleInfo> apply(KiePackage pkg) {

@@ -1,12 +1,13 @@
 package com.example.rules.core.processor;
 
-import com.example.rules.api.*;
+import com.example.rules.api.RuleException;
+import com.example.rules.api.RuleRequest;
 import com.example.rules.spi.RuleContext;
 import com.example.rules.spi.arbiter.Arbiter;
 import com.example.rules.spi.utils.ClassUtils;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.atteo.classindex.ClassIndex;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
@@ -14,12 +15,11 @@ import org.springframework.stereotype.Component;
 import java.io.Serializable;
 import java.util.*;
 
+@Slf4j
 @Component
 public class ArbiterFactoryImpl implements ArbiterFactory, ApplicationContextAware {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ArbiterFactoryImpl.class);
-
-    private ApplicationContext applicationContext;
+    @Setter private ApplicationContext applicationContext;
 
     @SuppressWarnings("rawtypes")
     private final Map<Class<? extends RuleRequest>, Class<? extends Arbiter>> arbiterMap = new HashMap<>();
@@ -32,7 +32,7 @@ public class ArbiterFactoryImpl implements ArbiterFactory, ApplicationContextAwa
                 Class<? extends RuleRequest> requestClass = ClassUtils.getTypeArgument(c, Arbiter.class, 0);
                 Class<? extends Arbiter> previous = arbiterMap.putIfAbsent(requestClass, c);
                 if (previous != null) {
-                    LOG.warn("Request " + requestClass + " cannot be associated with Arbiter " + c + ", already registered with " + previous);
+                    log.warn("Request " + requestClass + " cannot be associated with Arbiter " + c + ", already registered with " + previous);
                 } else {
                     Class<? extends Serializable> resultClass = ClassUtils.getTypeArgument(c, Arbiter.class, 1);
                     resultMap.put(requestClass, resultClass);
@@ -61,10 +61,5 @@ public class ArbiterFactoryImpl implements ArbiterFactory, ApplicationContextAwa
     @Override
     public Collection<Class<? extends RuleRequest>> getKnownRequests() {
         return arbiterMap.keySet();
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
     }
 }

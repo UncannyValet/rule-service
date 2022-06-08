@@ -1,10 +1,12 @@
 package com.example.rules.core.domain;
 
 import com.example.rules.api.RuleRequest;
+import lombok.Data;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+@Data
 @Entity
 @Table(name = "rule_log")
 public class RuleLog {
@@ -32,98 +34,8 @@ public class RuleLog {
     private byte[] requestData;
 
     private String requestDescription;
-
     private String resultClass;
-
     private String resultDescription;
-
     private String message;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public LocalDateTime getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
-    }
-
-    public LocalDateTime getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(LocalDateTime updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    public RuleRequest.State getState() {
-        return state;
-    }
-
-    public void setState(RuleRequest.State state) {
-        this.state = state;
-    }
-
-    public String getRequestClass() {
-        return requestClass;
-    }
-
-    public void setRequestClass(String requestClass) {
-        this.requestClass = requestClass;
-    }
-
-    public int getRequestHash() {
-        return requestHash;
-    }
-
-    public void setRequestHash(int requestHash) {
-        this.requestHash = requestHash;
-    }
-
-    public byte[] getRequestData() {
-        return requestData;
-    }
-
-    public void setRequestData(byte[] requestData) {
-        this.requestData = requestData;
-    }
-
-    public String getRequestDescription() {
-        return requestDescription;
-    }
-
-    public void setRequestDescription(String requestSummary) {
-        this.requestDescription = requestSummary;
-    }
-
-    public String getResultClass() {
-        return resultClass;
-    }
-
-    public void setResultClass(String resultClass) {
-        this.resultClass = resultClass;
-    }
-
-    public String getResultDescription() {
-        return resultDescription;
-    }
-
-    public void setResultDescription(String resultSummary) {
-        this.resultDescription = resultSummary;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
 }

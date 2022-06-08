@@ -1,7 +1,12 @@
 package com.example.rules.api;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Map;
 
+@Getter
+@Setter
 public class RuleInfo {
 
     public enum Type {
@@ -13,64 +18,11 @@ public class RuleInfo {
     }
 
     private String pkg;
-
     private String id;
-
     private Type type;
-
     private String source;
-
     private String session;
-
     private Map<String, Object> attributes;
-
-    public String getPkg() {
-        return pkg;
-    }
-
-    public void setPkg(String pkg) {
-        this.pkg = pkg;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Type getType() {
-        return type;
-    }
-
-    public void setType(Type type) {
-        this.type = type;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public String getSession() {
-        return session;
-    }
-
-    public void setSession(String session) {
-        this.session = session;
-    }
-
-    public Map<String, Object> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(Map<String, Object> attributes) {
-        this.attributes = attributes;
-    }
 
     @Override
     public String toString() {

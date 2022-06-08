@@ -1,21 +1,19 @@
 package com.example.rules.core.session;
 
 import com.example.rules.spi.session.RuleSession;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.stream.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+@Slf4j
+@RequiredArgsConstructor
 public class CompoundSession implements RuleSession {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CompoundSession.class);
-
     private final Collection<? extends RuleSession> sessions;
-
-    public CompoundSession(Collection<RuleSession> sessions) {
-        this.sessions = sessions;
-    }
 
     @Override
     public <F> void insert(F fact) {
@@ -89,7 +87,7 @@ public class CompoundSession implements RuleSession {
             try {
                 session.close();
             } catch (Exception e) {
-                LOG.error("Error closing rules session", e);
+                log.error("Error closing rules session", e);
             }
         }
     }

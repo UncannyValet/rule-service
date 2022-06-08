@@ -1,6 +1,7 @@
 package com.example.rules.core.drools;
 
 import com.example.rules.spi.session.RuleSession;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.kie.api.definition.rule.Rule;
@@ -16,16 +17,13 @@ import java.util.stream.*;
 /**
  * Wrapper class for Drools sessions
  */
+@RequiredArgsConstructor
 public class DroolsSession implements RuleSession {
 
     private final KieSession session;
     private final Map<String, MutableInt> ruleCounts = new HashMap<>();
 
-    private Logger log;
-
-    public DroolsSession(KieSession session) {
-        this.session = session;
-    }
+    private Logger logger;
 
     @Override
     public <F> void insert(F fact) {
@@ -45,8 +43,8 @@ public class DroolsSession implements RuleSession {
         try {
             session.setGlobal(identifier, value);
         } catch (RuntimeException e) {
-            if (log != null) {
-                log.debug("Cannot set global '" + identifier + "': " + e.getMessage());
+            if (logger != null) {
+                logger.debug("Cannot set global '" + identifier + "': " + e.getMessage());
             }
         }
     }
@@ -61,8 +59,8 @@ public class DroolsSession implements RuleSession {
     public int runRules() {
         RuleNameFilter filter = new RuleNameFilter();
         int count = filter.isEmpty() ? session.fireAllRules() : session.fireAllRules(filter);
-        if (log != null) {
-            ruleCounts.forEach((name, value) -> log.info("- Rule '" + name + "' asserted " + value.intValue() + " time(s)"));
+        if (logger != null) {
+            ruleCounts.forEach((name, value) -> logger.info("- Rule '" + name + "' asserted " + value.intValue() + " time(s)"));
         }
         return count;
     }
@@ -113,7 +111,7 @@ public class DroolsSession implements RuleSession {
 
     @Override
     public void setLogger(Logger log) {
-        this.log = log;
+        this.logger = log;
         session.addEventListener(new AgendaEventLogger());
     }
 

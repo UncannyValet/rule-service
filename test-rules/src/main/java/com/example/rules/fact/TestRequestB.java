@@ -1,18 +1,12 @@
 package com.example.rules.fact;
 
 import com.example.rules.api.RuleRequest;
+import lombok.Data;
 
+@Data
 public class TestRequestB implements RuleRequest {
 
     private int value;
-
-    public int getValue() {
-        return value;
-    }
-
-    public void setValue(int value) {
-        this.value = value;
-    }
 
     public void add(int value) {
         this.value += value;

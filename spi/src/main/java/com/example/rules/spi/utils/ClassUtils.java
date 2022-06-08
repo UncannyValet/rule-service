@@ -24,8 +24,8 @@ public class ClassUtils {
 
     public static <T> T instantiate(Class<T> clazz) {
         try {
-            return clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+            return clazz.getDeclaredConstructor().newInstance();
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new RuleException("Failed to instantiate object " + clazz.getName(), e);
         }
     }

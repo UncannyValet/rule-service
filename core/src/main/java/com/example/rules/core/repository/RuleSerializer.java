@@ -3,18 +3,17 @@ package com.example.rules.core.repository;
 import com.example.rules.api.RuleException;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterOutputStream;
 
+@Slf4j
 public class RuleSerializer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RuleSerializer.class);
     private static final XStream xstream;
 
     static {
@@ -46,7 +45,7 @@ public class RuleSerializer {
             try {
                 return decompress(bytes);
             } catch (IOException e) {
-                LOG.warn("Failed to deserialize data as String", e);
+                log.warn("Failed to deserialize data as String", e);
             }
         }
         return "";
