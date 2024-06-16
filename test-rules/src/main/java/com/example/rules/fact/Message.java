@@ -1,10 +1,15 @@
 package com.example.rules.fact;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class Message {
 
     private final String text;
 
+    public Message(String text) {
+        this.text = text;
+    }
 }

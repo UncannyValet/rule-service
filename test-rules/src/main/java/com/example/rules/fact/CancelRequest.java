@@ -1,9 +1,11 @@
 package com.example.rules.fact;
 
 import com.example.rules.api.RuleRequest;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class CancelRequest implements RuleRequest {
 
     public enum Type {
@@ -19,4 +21,7 @@ public class CancelRequest implements RuleRequest {
 
     private final Type type;
 
+    public CancelRequest(Type type) {
+        this.type = type;
+    }
 }
